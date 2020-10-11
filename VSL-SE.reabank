@@ -1,0 +1,25 @@
+// .reabank files define MIDI bank/program (patch) information
+// for specific hardware or software devices
+
+// A bank entry lists the MSB, LSB, and bank name
+// for all the patches that follow, until the next bank entry.
+
+Bank 121 1 VSL SE1 & 2
+
+// A program entry simply lists the program number and patch name.
+
+1	Staccato
+2	Detache
+17	Sustain
+18	Marcato
+19	XF Trem
+33	Legato
+34	Leg Sus
+34	Portamento
+49	Sforzato
+50	Sfx XF Trem
+65	Tremolo
+66	Tremolo Marcato
+80	Pizzicato
+126     Vel. XF On
+127     Vel. XF Off
