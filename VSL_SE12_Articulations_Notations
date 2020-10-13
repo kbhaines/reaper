@@ -15,8 +15,10 @@ dim2=(art_type == 0 ? 36 : 96);
 // this is the last articulation set by an actual PC message
 pc_art = 0;
 
-// this is the current articulation set by a notation
+// this is the articulation last set by a notation
 active_notn_art = 0;
+
+live = 0;
 
 function parse_notation(msg) (
   artic = 0;
@@ -36,7 +38,7 @@ function parse_notation(msg) (
 function set_ks_from_pc(offset, pc) (
     blip_note(offset, dim1 + (pc >> 4));
     d2 = pc & 15; 
-    d2 > 0 ? blip_note(offset, pc+d2-1);
+    d2 > 0 ? blip_note(offset, dim2 + (d2-1));
 );
 
 // return 0 if the message wasn't handled
@@ -66,14 +68,20 @@ while (midirecv_str(offset, #str)) (
         set_ks_from_pc(offset, art_notn);
       );
       active_notn_art = art_notn;
+      
+      // two note-on messages will reset notation-articulation
+      note_on_ctr = 2;
     );
   ) : (
     handle_pc(offset, msg1, msg2, str_getchar(#str, 2)) == 0 ? (
-      midisend_str(offset, #str); // passthrough other events
-      msg1 & $x90 == $x90 && active_notn_art ? (
-        active_notn_art = 0;
-        set_ks_from_pc(offset, pc_art);
+      msg1 == $x90 && note_on_ctr ? (
+        note_on_ctr -=1 ;
+        note_on_ctr == 0 ? (
+          set_ks_from_pc(offset, pc_art);
+          active_notn_art = 0;
+        );
       );
+      midisend_str(offset, #str); // passthrough other events
     );
   );
 ); 
