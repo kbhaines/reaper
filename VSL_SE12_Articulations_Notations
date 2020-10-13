@@ -1,0 +1,79 @@
+desc:VSL SE12 Articulation Controller
+slider1:art_type=0<0,2,1{C1/C2,C1/C7 (Cello),C6/C7}>Articulation KS Config
+
+in_pin:none
+out_pin:none
+
+@init
+function blip_note(offset, note) (
+  midisend(offset, $x90, note, 127);
+  midisend(offset, $x80, note, 0);
+);
+dim1=(art_type < 2 ? 24 : 84);
+dim2=(art_type == 0 ? 36 : 96);
+
+// this is the last articulation set by an actual PC message
+pc_art = 0;
+
+// this is the current articulation set by a notation
+active_notn_art = 0;
+
+function parse_notation(msg) (
+  artic = 0;
+  match("*custom sfz", #msg) ? artic = 49;
+  match("*custom sfz ornament tremolo", #msg) ? artic = 50;
+  match("*custom sus phrase %d slur", #msg) ? artic = 34;
+  match("*custom xf ornament tremolo", #msg) ? artic = 19;
+  match("*articulation marcato ornament tremolo", #msg) ? artic = 66;
+  match("*articulation marcato", #msg) ? artic = 18;
+  match("*articulation staccato", #msg) ? artic = 1;
+  match("*ornament tremolo", #msg) ? artic = 65;
+  match("*phrase %d slur*", #msg) ? artic = 33;
+  match("*phrase %d slur*technique bend", #msg) ? artic = 34;
+  artic;
+);
+
+function set_ks_from_pc(offset, pc) (
+    blip_note(offset, dim1 + (pc >> 4));
+    d2 = pc & 15; 
+    d2 > 0 ? blip_note(offset, pc+d2-1);
+);
+
+// return 0 if the message wasn't handled
+function handle_pc(offset, msg1, msg2, msg3) (
+  (msg1 == $xC0 ) ? (
+    (msg2 < 126) ? (
+      pc_art = msg2;
+      set_ks_from_pc(offset, pc_art);
+    ) : (
+      (msg2 == 126 ) ? midisend(offset, $xB0, 28, 127) : midisend(offset, $xB0, 28, 0)
+     );
+     1
+  ) : 0;
+);
+
+
+@block
+while (midirecv_str(offset, #str)) (
+  msg1 = str_getchar(#str, 0);
+  msg2 = str_getchar(#str, 1);
+  
+  // Look for a string event which is a notation
+  msg1 == $xFF && msg2 == $x0F ? (
+    strcpy_from(#msg, #str, 2);
+    (art_notn = parse_notation(#msg)) ? (
+      active_notn_art != art_notn ? (
+        set_ks_from_pc(offset, art_notn);
+      );
+      active_notn_art = art_notn;
+    );
+  ) : (
+    handle_pc(offset, msg1, msg2, str_getchar(#str, 2)) == 0 ? (
+      midisend_str(offset, #str); // passthrough other events
+      msg1 & $x90 == $x90 && active_notn_art ? (
+        active_notn_art = 0;
+        set_ks_from_pc(offset, pc_art);
+      );
+    );
+  );
+); 
