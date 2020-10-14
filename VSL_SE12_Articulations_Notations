@@ -23,15 +23,15 @@ live = 0;
 function parse_notation(msg) (
   artic = 0;
   match("*custom sfz", #msg) ? artic = 49;
-  match("*custom sfz ornament tremolo", #msg) ? artic = 50;
-  match("*custom sus phrase %d slur", #msg) ? artic = 34;
-  match("*custom xf ornament tremolo", #msg) ? artic = 19;
-  match("*articulation marcato ornament tremolo", #msg) ? artic = 66;
+  match("*phrase %d slur*", #msg) ? artic = 33;
+  match("*ornament tremolo", #msg) ? artic = 65;
   match("*articulation marcato", #msg) ? artic = 18;
   match("*articulation staccato", #msg) ? artic = 1;
-  match("*ornament tremolo", #msg) ? artic = 65;
-  match("*phrase %d slur*", #msg) ? artic = 33;
+  match("*custom sus phrase*", #msg) ? artic = 34;
+  match("*custom xf ornament tremolo", #msg) ? artic = 19;
+  match("*custom sfz ornament tremolo", #msg) ? artic = 50;
   match("*phrase %d slur*technique bend", #msg) ? artic = 34;
+  match("*articulation marcato ornament tremolo", #msg) ? artic = 66;
   artic;
 );
 
