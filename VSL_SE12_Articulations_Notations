@@ -17,8 +17,8 @@ pc_art = 0;
 
 // this is the articulation last set by a notation
 active_notn_art = 0;
-
-live = 0;
+art_notn = 0;
+note_on_ctr = 0;
 
 function parse_notation(msg) (
   artic = 0;
@@ -66,8 +66,8 @@ while (midirecv_str(offset, #str)) (
     (art_notn = parse_notation(#msg)) ? (
       active_notn_art != art_notn ? (
         set_ks_from_pc(offset, art_notn);
+        active_notn_art = art_notn;
       );
-      active_notn_art = art_notn;
       
       // two note-on messages will reset notation-articulation
       note_on_ctr = 2;
@@ -82,6 +82,8 @@ while (midirecv_str(offset, #str)) (
         );
       );
       midisend_str(offset, #str); // passthrough other events
+    ) : ( 
+      active_notn_art =0;  // PC disables active articulation
     );
   );
 ); 
