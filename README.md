@@ -22,9 +22,9 @@ I haven't mapped everything - only the ones I need for parts of my libraries (Al
 but it should be straightforward change/add anything you need.
 
 To add a new articulation, work out what the notation is in text (using the
-event view in Reaper after annotating the note) and add it into the list along with
-the corresponding CC32 value; try to keep the list sorted in string-length order
-and also keep the higher-priority items down the bottom (*).
+event view in Reaper after annotating the note) and add it into the list in 
+`parse_notation` along with the corresponding CC32 value; try to keep the list 
+sorted in string-length order and also keep the higher-priority items down the bottom (*).
 
 (*) I'm aware this is not ideal and will try to improve it over time, but
 it's not a priority for me right now.
