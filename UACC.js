@@ -28,7 +28,7 @@ function parse_notation(msg) (
   match("*custom col-legno", #msg) ? artic = 58;
   match("*custom con-sordino", #msg) ? artic = 7;
   match("*ornament pluck", #msg) ? artic = 56;  // pizz
-  match("*phrase %d slur*", #msg) ? artic = 0;
+  match("*phrase %d slur*", #msg) ? artic = 20;
   match("*ornament tremolo", #msg) ? artic = 11;
   match("*articulation marcato", #msg) ? artic = 52;
   match("*articulation staccato", #msg) ? artic = 40;
