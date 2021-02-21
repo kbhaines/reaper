@@ -55,9 +55,13 @@ slider57:0<-36,36,1>Note Translation
 // create our data for the slider input values, there's 5 sliders
 // so each block is 5 elements
 i=0;
+
+// This is a bitmap of the channels used by the configuration
+channels_in_use = 0;
 while (i < num_params) (
   chord_note_channel[i] = slider(10+i*3);
   chord_note[i] = slider(11+i*3);
+  chord_note[i] ? channels_in_use |= 1 << chord_note_channel[i]-1;
   chord_note_translation[i] = slider(12+i*3);
   i += 1;
 );
@@ -220,17 +224,31 @@ function under(offset, msg1, msg2, msg3) (
   );
 );
 
+function handle_control_messages(offset, msg1, msg2, msg3) local(chans,i) (
+  chans = channels_in_use;
+  i = 0;
+  msg1 == $xB0 ? 
+    while (chans) (
+      chans & 1 ? midisend(offset, $xB0+i, msg2, msg3);
+      i+=1;
+      chans = chans >> 1;
+    ) : midisend(offset, msg1, msg2, msg3);
+);
+
 
 state = st_zero;
 
 @block
 while (midirecv(offset, msg1, msg2, msg3)) (
+
+  // Handle noteon/noteoff messages inside the state machine
   msg1 == $x80 || msg1 == $x90 ? (
     state = 
         state == st_zero ? zero(offset, msg1, msg2, msg3)
       : state == st_play ? play(offset, msg1, msg2, msg3) 
       : state == st_over ? over(offset, msg1, msg2, msg3)
       : state == st_under ? under(offset, msg1, msg2, msg3);
-  ) : midisend(offset, msg1, msg2, msg3);
-);
 
+  // control messages are multi-plexed out to the used channels
+  ) : handle_control_messages(offset, msg1, msg2, msg3);
+);
