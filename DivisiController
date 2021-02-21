@@ -52,10 +52,7 @@ slider56:0<1,10,1>Chord Note #
 slider57:0<-36,36,1>Note Translation
 
 @slider
-// create our data for the slider input values, there's 5 sliders
-// so each block is 5 elements
 i=0;
-
 // This is a bitmap of the channels used by the configuration
 channels_in_use = 0;
 while (i < num_params) (
@@ -68,15 +65,18 @@ while (i < num_params) (
 
 
 @init
+
+// constants for the various states
 st_zero = 0;
 st_collect = 1;
 st_play = 2;
 st_under = 3;
 st_over = 4;
 
-// notelist[0-127] contains the list of notes playing, using
-// 11 as a 'new note' indicator. Otherwise, it stores the note
-// number of the chord being played, from 1 to num_notes.
+// notelist[0-127] contains the list of notes playing or collected, using 11 as
+// a 'new note' indicator. Otherwise, it stores the note number of the chord
+// being played, from 1 to num_notes.
+
 notelist = 0;
 
 // number of notes on
@@ -84,15 +84,14 @@ num_notes = 0;
 
 
 num_params = 16;
+
+// UI settings are stored in these arrays
 chord_note = 200;
 chord_note_channel = chord_note + num_params;
 chord_note_translation = chord_note_channel + num_params;
 
 min_notes = slider1 + 1;
 max_notes = slider2 + 2;
-
-
-// Helpful functions
 
 function handle_chord_note(cmd, offset, chord_note_id, note, vel) local (i) (
   i = 0;
@@ -252,3 +251,4 @@ while (midirecv(offset, msg1, msg2, msg3)) (
   // control messages are multi-plexed out to the used channels
   ) : handle_control_messages(offset, msg1, msg2, msg3);
 );
+
