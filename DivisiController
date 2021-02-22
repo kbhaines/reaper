@@ -68,9 +68,8 @@ while (i < num_params) (
 
 // constants for the various states
 st_zero = 0;
-st_collect = 1;
-st_play = 2;
-st_under = 3;
+st_min_notes = 1;
+st_max_notes = 2;
 st_over = 4;
 
 // notelist[0-127] contains the list of notes playing or collected, using 11 as
@@ -167,60 +166,48 @@ function is_note_off(msg1, msg2, msg3) (
 
 function zero(offset, msg1, msg2, msg3) (
   
-  new_state = st_zero;
   handled = is_note_on(msg1, msg2, msg3);
   !handled ? handled = is_note_off(msg1, msg2, msg3);
   
-  num_notes == min_notes ? (
+	num_notes == max_notes ? (
+		play_chord(offset, 100);
+		st_max_notes;
+	) : num_notes == min_notes ? (
     play_chord(offset, 100);
-    new_state = st_play;
-  );
-  new_state;
+    st_min_notes;
+  ) : st_zero;
 );
 
  
-function play(offset, msg1, msg2, msg3) (
-
-  new_state = st_play;
-  handled = 0;
-  // Note-on event
-  
+function min_notes(offset, msg1, msg2, msg3) (
   is_note_on(msg1, msg2, msg3) ? (
-    handled = 1;
-    new_state = num_notes > max_notes ? st_over : ( 
-      play_chord(offset, 100);
-      st_play;
-      );
+    play_chord(offset, 100);
+    num_notes == max_notes ? st_max_notes : st_min_notes;
+  ) : is_note_off(msg1, msg2, msg3) ? (
+    num_notes == 0 ? st_zero : st_min_notes;
   );
-  
-  // Note-off event
-  is_note_off(msg1, msg2, msg3) ? (
-    handled = 1;
-    new_state = num_notes < min_notes ? st_under : st_play;
-  );
-  new_state;
 );
 
-// More notes are on than the min_notes
+function max_notes(offset, msg1, msg2, msg3) (
+  new_state = st_max_notes;
+  is_note_on(msg1, msg2, msg3) ? (
+    num_notes > max_notes ? st_over : ( 
+      play_chord(offset, 100);
+      st_max_notes;
+      );
+  ) : is_note_off(msg1, msg2, msg3) ? (
+    num_notes < max_notes ? st_min_notes : st_max_notes;
+  );
+);
+
+// More notes are on than the max_notes
 function over(offset, msg1, msg2, msg3) (
   is_note_off(msg1, msg2, msg3) ? (
     num_notes == max_notes ? (
       play_chord(offset, 100);
-      st_play;
+      st_max_notes;
     );
   ) : is_note_on(msg1, msg2, msg3) ? st_over;
-);
-
-// Fewer than min_notes are currently on
-function under(offset, msg1, msg2, msg3) (
-  is_note_on(msg1, msg2, msg3) ? (
-    num_notes == min_notes ?  (
-      play_chord(offset, 100);
-      st_play;
-    ) : st_under;
-  ) : is_note_off(msg1, msg2, msg3) ? (
-      num_notes == 0 ? st_zero : st_under;
-  );
 );
 
 function handle_control_messages(offset, msg1, msg2, msg3) local(chans,i) (
@@ -244,9 +231,9 @@ while (midirecv(offset, msg1, msg2, msg3)) (
   msg1 == $x80 || msg1 == $x90 ? (
     state = 
         state == st_zero ? zero(offset, msg1, msg2, msg3)
-      : state == st_play ? play(offset, msg1, msg2, msg3) 
-      : state == st_over ? over(offset, msg1, msg2, msg3)
-      : state == st_under ? under(offset, msg1, msg2, msg3);
+      : state == st_min_notes ? min_notes(offset, msg1, msg2, msg3) 
+      : state == st_max_notes ? max_notes(offset, msg1, msg2, msg3) 
+      : state == st_over ? over(offset, msg1, msg2, msg3);
 
   // control messages are multi-plexed out to the used channels
   ) : handle_control_messages(offset, msg1, msg2, msg3);
