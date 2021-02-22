@@ -169,10 +169,10 @@ function zero(offset, msg1, msg2, msg3) (
   handled = is_note_on(msg1, msg2, msg3);
   !handled ? handled = is_note_off(msg1, msg2, msg3);
   
-	num_notes == max_notes ? (
-		play_chord(offset, 100);
-		st_max_notes;
-	) : num_notes == min_notes ? (
+  num_notes == max_notes ? (
+    play_chord(offset, 100);
+    st_max_notes;
+  ) : num_notes == min_notes ? (
     play_chord(offset, 100);
     st_min_notes;
   ) : st_zero;
