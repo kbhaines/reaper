@@ -2,69 +2,68 @@ desc:Divisi Controller
 slider1:1<1,7,1{1,2,3,4,5,6,7}>Min Notes in Chord
 slider2:2<2,8,1{2,3,4,5,6,7,8}>Max Notes in Chord
 
-slider10:1<1,5,1>Midi Channel
+slider10:1<1,1616,1><><><><><> Midi Channel
 slider11:1<1,10,1>Chord Note #
 slider12:0<-36,36,1>Note Translation
-slider13:2<1,5,1>Midi Channel
+slider13:2<1,1616,1><><><><><> Midi Channel
 slider14:2<1,10,1>Chord Note #
 slider15:0<-36,36,1>Note Translation
-slider16:3<1,5,1>Midi Channel
+slider16:3<1,1616,1><><><><><> Midi Channel
 slider17:3<1,10,1>Chord Note #
 slider18:0<-36,36,1>Note Translation
-slider19:4<1,5,1>Midi Channel
+slider19:4<1,1616,1><><><><><> Midi Channel
 slider20:0<1,10,1>Chord Note #
 slider21:0<-36,36,1>Note Translation
-slider22:5<1,5,1>Midi Channel
+slider22:5<1,1616,1><><><><><> Midi Channel
 slider23:0<1,10,1>Chord Note #
 slider24:0<-36,36,1>Note Translation
-slider25:6<1,5,1>Midi Channel
+slider25:6<1,1616,1><><><><><> Midi Channel
 slider26:0<1,10,1>Chord Note #
 slider27:0<-36,36,1>Note Translation
-slider28:7<1,5,1>Midi Channel
+slider28:7<1,1616,1><><><><><> Midi Channel
 slider29:0<1,10,1>Chord Note #
 slider30:0<-36,36,1>Note Translation
-slider31:8<1,5,1>Midi Channel
+slider31:8<1,1616,1><><><><><> Midi Channel
 slider32:0<1,10,1>Chord Note #
 slider33:0<-36,36,1>Note Translation
-slider34:9<1,5,1>Midi Channel
+slider34:9<1,1616,1><><><><><> Midi Channel
 slider35:0<1,10,1>Chord Note #
 slider36:0<-36,36,1>Note Translation
-slider37:10<1,5,1>Midi Channel
+slider37:10<1,1616,1><><><><><> Midi Channel
 slider38:0<1,10,1>Chord Note #
 slider39:0<-36,36,1>Note Translation
-slider40:11<1,5,1>Midi Channel
+slider40:11<1,1616,1><><><><><> Midi Channel
 slider41:0<1,10,1>Chord Note #
 slider42:0<-36,36,1>Note Translation
-slider43:12<1,5,1>Midi Channel
+slider43:12<1,1616,1><><><><><> Midi Channel
 slider44:0<1,10,1>Chord Note #
 slider45:0<-36,36,1>Note Translation
-slider46:13<1,5,1>Midi Channel
+slider46:13<1,1616,1><><><><><> Midi Channel
 slider47:0<1,10,1>Chord Note #
 slider48:0<-36,36,1>Note Translation
-slider49:14<1,5,1>Midi Channel
+slider49:14<1,1616,1><><><><><> Midi Channel
 slider50:0<1,10,1>Chord Note #
 slider51:0<-36,36,1>Note Translation
-slider52:15<1,5,1>Midi Channel
+slider52:15<1,1616,1><><><><><> Midi Channel
 slider53:0<1,10,1>Chord Note #
 slider54:0<-36,36,1>Note Translation
-slider55:16<1,5,1>Midi Channel
+slider55:16<1,1616,1><><><><><> Midi Channel
 slider56:0<1,10,1>Chord Note #
 slider57:0<-36,36,1>Note Translation
 
 @slider
 i=0;
-// This is a bitmap of the channels used by the configuration
-channels_in_use = 0;
 while (i < num_params) (
-  chord_note_channel[i] = slider(10+i*3);
+  chord_note_channel[i] = ((slider(10+i*3)/100 - 1) << 4) + (slider(10+i*3) % 100 -1);
   chord_note[i] = slider(11+i*3);
-  chord_note[i] ? channels_in_use |= 1 << chord_note_channel[i]-1;
   chord_note_translation[i] = slider(12+i*3);
   i += 1;
 );
 
 
 @init
+ext_midi_bus = 1.0;
+
 
 // constants for the various states
 st_zero = 0;
@@ -82,6 +81,7 @@ notelist = 0;
 num_notes = 0;
 
 
+// There are 16 sets of sliders/parameter blocks
 num_params = 16;
 
 // UI settings are stored in these arrays
@@ -92,11 +92,20 @@ chord_note_translation = chord_note_channel + num_params;
 min_notes = slider1 + 1;
 max_notes = slider2 + 2;
 
+function _log(val1, val2) local(old) (
+  old = midi_bus;
+  midi_bus = 15;
+  midisend(0, $x80, val1, val2);
+  midi_bus = old;
+);
+
 function handle_chord_note(cmd, offset, chord_note_id, note, vel) local (i) (
   i = 0;
   while (i < num_params) (
-    chord_note[i] == chord_note_id ? 
-      midisend(offset, (cmd-1)+chord_note_channel[i], note+chord_note_translation[i], vel);
+    chord_note[i] == chord_note_id ? (
+      midi_bus = chord_note_channel[i] >> 4;
+      midisend(offset, cmd + (chord_note_channel[i] & 15), note+chord_note_translation[i], vel);
+    );
     i+=1;
   );
 );
@@ -109,15 +118,10 @@ function note_on(new_note) (
 function note_off(offset, note) (
   // if the note was sounding then turn it off
   notelist[note] < 11 ? (
-    //midisend(offset, $x7F+notelist[note], note, 0);
     handle_chord_note($x80, offset, notelist[note], note, 0);
   );
   notelist[note] = 0;
   num_notes -=1 ;
-);
-
-function _log(val) (
-  midisend(0, $x80, val);
 );
 
 function play_chord(offset, vel) local (chord_note, i ) (
@@ -129,15 +133,12 @@ function play_chord(offset, vel) local (chord_note, i ) (
      // the current chord_note value1
      notelist[i] != 0 ? (
        notelist[i] == 11 ? ( 
-         //midisend(offset, $x8F+chord_note, i, vel);
          handle_chord_note($x90, offset, chord_note, i, vel);
        ) : notelist[i] != chord_note ? (
          // note is already sounding in another position (channel),
          // we need to move it by turning it off and back
          // on in the new position/channel.
-         //midisend(offset, $x7F+notelist[i], i, 0);
          handle_chord_note($x80, offset, notelist[i], i, vel);
-         //midisend(offset, $x8F+chord_note, i, vel);
          handle_chord_note($x90, offset, chord_note, i, vel);
        );
        notelist[i] = chord_note;
@@ -211,14 +212,18 @@ function over(offset, msg1, msg2, msg3) (
 );
 
 function handle_control_messages(offset, msg1, msg2, msg3) local(chans,i) (
-  chans = channels_in_use;
   i = 0;
   msg1 == $xB0 ? 
-    while (chans) (
-      chans & 1 ? midisend(offset, $xB0+i, msg2, msg3);
+    while (i < num_params) (
+      chord_note[i] ? (
+        midi_bus = chord_note_channel[i] >> 4;
+        midisend(offset, $xB0+(chord_note_channel[i] & 15), msg2, msg3);
+      );
       i+=1;
-      chans = chans >> 1;
-    ) : midisend(offset, msg1, msg2, msg3);
+    ) : (
+      midi_bus = 0;
+      midisend(offset, msg1, msg2, msg3);
+    );
 );
 
 
