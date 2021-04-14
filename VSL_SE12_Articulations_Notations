@@ -17,23 +17,45 @@ dim2=(art_type == 0 ? 36 : 96);
 // Dimension 2 is in the lower 4 bits, and range 0 to 15.
 // So 0x21 = notes D1 + C#2 in an instrument with C1/C2 style 
 // keyswitches. It's harlmess to send an unused dimension note.
-
-
-ks_short_stac= $x00;
-ks_short_det = $x01;
-ks_long_sus  = $x10;
+ks_col_legno = $x52;
+ks_con_sord = $x81;
+ks_con_sord_marc = $x82;
+ks_con_sord_stac = $x80;
+ks_con_sord_trem = $x83;
+ks_detache = $x2;
+ks_detache_short = $x1;
+ks_dyn_sfz_trem = $x31;
+ks_fortepiano = $x32;
+ks_fortepiano_trem = $x33;
+ks_harmonics = $x61;
+ks_harmonics_marc = $x62;
+ks_harmonics_stac = $x60;
+ks_leg_leg = $x20;
+ks_leg_port = $x21;
+ks_leg_sus = $x21;
+ks_legato_rep = $x2;
 ks_long_marc = $x11;
 ks_long_trem = $x12;
-ks_leg_leg   = $x20;
-ks_leg_port  = $x21;
-ks_leg_sus   = $x21;   // brass/wind
-ks_dyn_sfz   = $x30;
-ks_sfz       = $x30;   // brass/wind
-ks_dyn_sfz_trem = $x31;
-ks_trem_trem = $x40;
+ks_pizz = $x50;
+ks_pizz = $x50;
+ks_portato = $x1;
+ks_rep150 = $x44;
+ks_rep170 = $x45;
+ks_rep190 = $x46;
+ks_sfz = $x30;
+ks_short_stac = $x0;
+ks_snap_pizz = $x51;
+ks_staccato_rep = $x3;
+ks_str_legato_rep = $x3;
+ks_str_spiccato_rep = $x4;
+ks_sul_pont = $x71;
+ks_sul_pont_marc = $x72;
+ks_sul_pont_stac = $x70;
+ks_sul_pont_trem = $x73;
 ks_trem_marc = $x41;
-ks_pizz      = $x50;
-
+ks_trem_trem = $x40;
+ks_trill = $x42;
+ks_whole_trill = $x43;
 
 // this is the last articulation set by an actual PC message
 pc_art = ks_long_sus;
@@ -53,15 +75,42 @@ function parse_notation(msg) (
   artic = -1;
   match("*custom sfz", msg) ? artic = ks_sfz;
   match("*custom pizz", msg) ? artic = ks_pizz;
+  match("*custom rep150", msg) ? artic = ks_rep150;
+  match("*custom rep170", msg) ? artic = ks_rep170;
+  match("*custom rep190", msg) ? artic = ks_rep190;
+  match("*custom detache", msg) ? artic = ks_detache;
+  match("*ornament trill", msg) ? artic = ks_trill;
+  match("*custom sul-pont", msg) ? artic = ks_sul_pont;
   match("*phrase %d slur*", msg) ? artic = ks_leg_leg;
+  match("*custom snap-pizz", msg) ? artic = ks_snap_pizz;
+  match("*custom col-legno", msg) ? artic = ks_col_legno;
+  match("*custom harmonics", msg) ? artic = ks_harmonics;
   match("*ornament tremolo", msg) ? artic = ks_trem_trem;
+  match("*custom fortepiano", msg) ? artic = ks_fortepiano;
+  match("*custom con-sordino", msg) ? artic = ks_con_sord;
+  match("*custom rep phrase*", msg) ? artic = ks_legato_rep;
+  match("*custom sus phrase*", msg) ? artic = ks_leg_sus;
+  match("*custom detache-short", msg) ? artic = ks_detache_short;
+  match("*articulation portato", msg) ? artic = ks_portato;
   match("*articulation marcato", msg) ? artic = ks_long_marc;
   match("*articulation staccato", msg) ? artic = ks_short_stac;
-  match("*custom sus phrase*", msg) ? artic = ks_leg_sus;
+  match("*custom str-rep phrase*", msg) ? artic = ks_str_legato_rep;
+  match("*ornament whole_note_trill", msg) ? artic = ks_whole_trill;
   match("*custom xf ornament tremolo", msg) ? artic = ks_long_trem;
   match("*custom sfz ornament tremolo", msg) ? artic = ks_dyn_sfz_trem;
   match("*phrase %d slur*technique bend", msg) ? artic = ks_leg_port;
+  match("*custom sul-pont ornament tremolo", msg) ? artic = ks_sul_pont_trem;
+  match("*custom rep articulation staccato", msg) ? artic = ks_staccato_rep;
+  match("*custom fortepiano ornament tremolo", msg) ? artic = ks_fortepiano_trem;
+  match("*custom con-sordino ornament tremolo", msg) ? artic = ks_con_sord_trem;
+  match("*custom str-rep articulation staccato", msg) ? artic = ks_str_spiccato_rep;
+  match("*custom sul-pont articulation marcato", msg) ? artic = ks_sul_pont_marc;
+  match("*custom harmonics articulation marcato", msg) ? artic = ks_harmonics_marc;
+  match("*custom sul-pont articulation staccato", msg) ? artic = ks_sul_pont_stac;
   match("*articulation marcato ornament tremolo", msg) ? artic = ks_trem_marc;
+  match("*custom harmonics articulation staccato", msg) ? artic = ks_harmonics_stac;
+  match("*custom con-sordino articulation marcato", msg) ? artic = ks_con_sord_marc;
+  match("*custom con-sordino articulation staccato", msg) ? artic = ks_con_sord_stac;
   artic;
 );
 
