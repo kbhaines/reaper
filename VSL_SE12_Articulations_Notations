@@ -1,10 +1,18 @@
+// Allow cc32: a 7 bit control value in CC32 will be interpreted
+// as follows:  top 3 bits = slot 1 (0-7), 4 bits = slot 2 (0-15)
+
+
 desc:VSL SE12 Articulation Controller V2
 slider1:art_type=0<0,2,1{C1/C2,C1/C7 (Cello),C6/C7}>Articulation KS Config
 slider2:auto_xf=0<0,1,1{Off,On}>Auto-XF control
+slider3:sticky_artic=0<0,1,1{Off,On}>Sticky articulation
+slider4:allow_cc32=0<0,1,1{Off,On}>Allow CC32
 in_pin:none
 out_pin:none
 
 @init
+ext_midi_bus = 1.0;
+
 function blip_note(offset, note) (
   midisend(offset, $x90, note, 127);
   midisend(offset, $x80, note, 0);
@@ -22,8 +30,8 @@ ks_con_sord = $x81;
 ks_con_sord_marc = $x82;
 ks_con_sord_stac = $x80;
 ks_con_sord_trem = $x83;
-ks_detache = $x2;
-ks_detache_short = $x1;
+ks_detache = $x02;
+ks_detache_short = $x01;
 ks_dyn_sfz_trem = $x31;
 ks_fortepiano = $x32;
 ks_fortepiano_trem = $x33;
@@ -35,10 +43,11 @@ ks_leg_port = $x21;
 ks_leg_sus = $x21;
 ks_legato_rep = $x2;
 ks_long_marc = $x11;
+ks_long_sus = $x10;
 ks_long_trem = $x12;
 ks_pizz = $x50;
 ks_pizz = $x50;
-ks_portato = $x1;
+ks_portato = $x01;
 ks_rep150 = $x44;
 ks_rep170 = $x45;
 ks_rep190 = $x46;
@@ -67,6 +76,13 @@ active_notn_art = -1;
 art_notn = 0;
 note_on_ctr = 1;
 
+
+function _log(val1, val2) local(old) (
+  old = midi_bus;
+  midi_bus = 15;
+  midisend(0, $x80, val1, val2);
+  midi_bus = old;
+);
 
 // returns an articulation code based on the string passed, or
 // -1 if the string wasn't matched. It's not an optimum solution
@@ -156,8 +172,12 @@ while (midirecv_str(offset, #str)) (
   msg2 = str_getchar(#str, 1);
   msg3 = str_getchar(#str, 2);
   
-  // Look for a string event which is a notation
+  // Check CC32
+  msg1 == $xB0 && msg2 == 32 && allow_cc32 ? (
+    set_ks_from_pc(offset, msg3);
+  ) :  // Look for a string event which is a notation
   msg1 == $xFF && msg2 == $x0F ? (
+    _log(0,1);
     strcpy_from(#msg, #str, 2);
     art_notn = parse_notation(#msg);
     (art_notn >=0 ) ? (
@@ -174,7 +194,7 @@ while (midirecv_str(offset, #str)) (
     handle_pc(offset, msg1, msg2, msg3) == 0 ? (
       msg1 == $x90 && msg3 > 0 && note_on_ctr ? (
         note_on_ctr -=1 ;
-        note_on_ctr == 0 ? (
+        note_on_ctr == 0 && !sticky_artic ? (
           set_ks_from_pc(offset, pc_art);
           handle_xf_control(offset, "reset");
           active_notn_art = -1;
