@@ -23,7 +23,8 @@ while (midirecv(offset,msg1,msg2,msg3)) (
   msg1 == $xb0 && msg2 == dynamic_cc ? (
     target_dyn = msg3;
     state == st_post_attack ? midisend(offset, msg1, target_cc, msg3);
-  ) : msg1==$x90 && msg3!=0 && state==st_init ? (
+  ) : msg1==$x90 && msg3!=0 ? (
+    note_on = msg2;
     state=st_attack;
     start_dyn = msg3;
     bars_per_second = tempo / (60.0 * ts_denom);
@@ -32,7 +33,7 @@ while (midirecv(offset,msg1,msg2,msg3)) (
     sample_block_counter = 0;
     //sample_counter  = samples_per_cycle * (attack_time / (tempo / ts_denom / 60.0));
     midisend(offset, msg1, msg2, msg3);
-  ) : msg1 == $x80 && state!=st_init ? (
+  ) : msg1 == $x80 && msg2 == note_on && state!=st_init ? (
     state=st_init;
     midisend(offset, msg1, msg2, msg3);
   ) : (
