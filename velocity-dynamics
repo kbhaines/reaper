@@ -1,0 +1,57 @@
+desc:CC2 Velocity Target
+slider1:attack_time=0.5<0,1>Attack Time (bars)
+slider2:resolution=50<10,200>Resolution (ms)
+
+@init
+st_init=0;
+st_pre_attack=1;
+st_attack=2;
+st_post_attack=3;
+
+state=st_init;
+
+target_dyn=64;
+target_cc = 2;
+dynamic_cc = 1;
+current_dyn = 0;
+
+@slider
+samples_per_cycle = resolution * (srate / 1000);
+
+@block
+while (midirecv(offset,msg1,msg2,msg3)) (
+  msg1 == $xb0 && msg2 == dynamic_cc ? (
+    target_dyn = msg3;
+    state == st_post_attack ? midisend(offset, msg1, target_cc, msg3);
+  ) : msg1==$x90 && msg3!=0 && state==st_init ? (
+    state=st_attack;
+    start_dyn = msg3;
+    bars_per_second = tempo / (60.0 * ts_denom);
+    samples_needed = (attack_time / bars_per_second) * srate;
+    samples_left = samples_needed;
+    sample_block_counter = 0;
+    //sample_counter  = samples_per_cycle * (attack_time / (tempo / ts_denom / 60.0));
+    midisend(offset, msg1, msg2, msg3);
+  ) : msg1 == $x80 && state!=st_init ? (
+    state=st_init;
+    midisend(offset, msg1, msg2, msg3);
+  ) : (
+    midisend(offset,msg1,msg2,msg3); // passthrough other events
+  );
+);
+    
+
+@sample
+state == st_attack && !samples_left ? (
+  state = st_post_attack;
+) : state == st_attack && sample_block_counter ? (
+  sample_block_counter -= 1;
+  samples_left -= 1;
+) : state == st_attack ? (
+  f = 1-(samples_left/samples_needed);
+  new_dynamic = (target_dyn - start_dyn) * f + start_dyn;
+  midisend(0, $xb0, target_cc, new_dynamic);
+  sample_block_counter = samples_per_cycle * (attack_time / (tempo / ts_denom / 60.0));
+  samples_left -= 1;
+);
+
