@@ -1,10 +1,10 @@
 desc:CC2 Velocity Target
-slider1:attack_time=2<0,16>Attack Time (beats)
+slider1:attack_time=2<0,16>Attack Time (beats, 0=disable plugin)
 slider2:resolution=50<10,200>Resolution (ms)
 slider3:attack_time_cc=19<0,127>Attack Time CC
-slider4:dynamic_cc=1<0,127>Dynamic CC
-slider5:target_cc=2<0,127>Target CC
-slider6:marcato_threshold=30<0,50>Auto Marcato Threshold
+slider4:dynamic_cc=1<0,127>Dynamic Input CC
+slider5:target_cc=2<0,127>Target CC to Control
+slider6:marcato_threshold=30<0,50>Auto Marcato Threshold (0=off)
 
 @init
 //state machine state values
@@ -25,6 +25,52 @@ bank_msb=122;
 bank_lsb=1;
 chan = 0;
 
+// Keyswitch constants. These encode in 2x 4 bits, dimension 1
+// is in the upper 4 bits and range 0-15 (0=C1, for example). 
+// Dimension 2 is in the lower 4 bits, and range 0 to 15.
+// So 0x21 = notes D1 + C#2 in an instrument with C1/C2 style 
+// keyswitches. It's harlmess to send an unused dimension note.
+ks_col_legno = $x52;
+ks_con_sord = $x81;
+ks_con_sord_marc = $x82;
+ks_con_sord_stac = $x80;
+ks_con_sord_trem = $x83;
+ks_detache = $x02;
+ks_detache_short = $x01;
+ks_dyn_sfz_trem = $x31;
+ks_fortepiano = $x32;
+ks_fortepiano_trem = $x33;
+ks_harmonics = $x61;
+ks_harmonics_marc = $x62;
+ks_harmonics_stac = $x60;
+ks_leg_leg = $x20;
+ks_leg_port = $x21;
+ks_leg_sus = $x21;
+ks_legato_rep = $x2;
+ks_long_marc = $x11;
+ks_long_sus = $x10;
+ks_long_trem = $x12;
+ks_pizz = $x50;
+ks_pizz = $x50;
+ks_portato = $x01;
+ks_rep150 = $x44;
+ks_rep170 = $x45;
+ks_rep190 = $x46;
+ks_sfz = $x30;
+ks_short_stac = $x0;
+ks_snap_pizz = $x51;
+ks_staccato_rep = $x3;
+ks_str_legato_rep = $x3;
+ks_str_spiccato_rep = $x4;
+ks_sul_pont = $x71;
+ks_sul_pont_marc = $x72;
+ks_sul_pont_stac = $x70;
+ks_sul_pont_trem = $x73;
+ks_trem_marc = $x41;
+ks_trem_trem = $x40;
+ks_trill = $x42;
+ks_whole_trill = $x43;
+
 function pc(articulation) (
     midisend(offset, $xB0 + chan, 0, bank_msb);
     midisend(offset, $xB0 + chan, 32, bank_lsb);
@@ -40,6 +86,7 @@ while (midirecv(offset,msg1,msg2,msg3)) (
     attack_time = ceil(16*( msg3 / 127));
   )
   : attack_time == 0 ? (
+    state = st_init;
     midisend(offset,msg1,msg2,msg3); // passthrough other events
   )
   : msg1 == $xb0 && msg2 == dynamic_cc ? (
@@ -49,10 +96,10 @@ while (midirecv(offset,msg1,msg2,msg3)) (
   : msg1==$x90 && msg3!=0 ? (
     state == st_init ? (
       marcato_threshold && msg3-target_dyn > marcato_threshold ? (
-        pc($x11);
-        midisend(offset, $xb0, 1, msg3);
+        pc(ks_long_marc);
+        midisend(offset, $xb0, 1, msg3);  // cc1=marcato blend
       )
-      : pc($x10);
+      : pc(ks_long_sus);
       notes_on = 1;
       state=st_attack;
       start_dyn = msg3;
@@ -64,10 +111,10 @@ while (midirecv(offset,msg1,msg2,msg3)) (
     )
     : state == st_attack || state == st_post_attack ? (
       notes_on+=1;
-      pc($x20);
+      pc(ks_leg_leg);
     );
-//    : target_dyn < 20 && msg3 > 100 ? pc($x30)
-//    : target_dyn < 20 && msg3 < 100 ? pc($x32)
+//    : target_dyn < 20 && msg3 > 100 ? pc(ks_sfz)
+//    : target_dyn < 20 && msg3 < 100 ? pc(ks_fortepiano)
 //    : (
     midisend(offset, msg1, msg2, msg3);
   ) : msg1 == $x80 && state!=st_init ? (
