@@ -1,11 +1,13 @@
-desc:CC2 Velocity Target
+desc:Velocity Dynamics Expression
 slider1:attack_time=2<0,16>Attack Time (beats, 0=disable plugin)
 slider2:max_attack_time=4<0,16>Max Attack Time (beats)
-slider3:resolution=50<10,200>Resolution (ms)
-slider4:attack_time_cc=19<0,127>Attack Time CC
-slider5:dynamic_cc=1<0,127>Dynamic Input CC
-slider6:target_cc=2<0,127>Target CC to Control
-slider7:marcato_threshold=30<0,50>Auto Marcato Threshold (0=off)
+slider3:attack_time_cc=19<0,127>Attack Time CC
+slider4:resolution=50<10,200>Resolution (ms)
+//slider5:attack_range=0<0,127>Attack Range Limiter (0=off)
+
+slider7:dynamic_cc=1<0,127>Dynamic Input CC
+slider8:target_cc=2<0,127>Target CC to Control
+slider9:marcato_threshold=30<0,50>Auto Marcato Threshold (0=off)
 
 @init
 //state machine state values
@@ -13,6 +15,7 @@ st_init=0;
 st_pre_attack=1;
 st_attack=2;
 st_post_attack=3;
+st_decay=4;
 
 // state machine state
 state=st_init;
@@ -20,7 +23,6 @@ state=st_init;
 target_dyn=64;
 current_dyn = 0;
 notes_on=0;
-
 
 bank_msb=122;
 bank_lsb=1;
@@ -84,6 +86,7 @@ function is_note_off(msg1, msg3) (
 
 @slider
 samples_per_cycle = resolution * (srate / 1000);
+decay_per_cycle = rebreath_time * (srate / 1000);
 
 @block
 while (midirecv(offset,msg1,msg2,msg3)) (
@@ -124,7 +127,10 @@ while (midirecv(offset,msg1,msg2,msg3)) (
     midisend(offset, msg1, msg2, msg3);
   ) : is_note_off(msg1, msg3) && state!=st_init ? (
     notes_on-=1;
-    notes_on==0 ? state=st_init;
+    notes_on==0 ? (
+      state=st_init;
+      decay_samples = 0;
+    );
     midisend(offset, msg1, msg2, msg3);
   ) : (
     midisend(offset,msg1,msg2,msg3); // passthrough other events
@@ -135,14 +141,20 @@ while (midirecv(offset,msg1,msg2,msg3)) (
 @sample
 state == st_attack && !samples_left ? (
   state = st_post_attack;
-) : state == st_attack && sample_block_counter ? (
+) 
+: state == st_attack && sample_block_counter ? (
   sample_block_counter -= 1;
   samples_left -= 1;
-) : state == st_attack ? (
+) 
+: state == st_attack ? (
   f = 1-(samples_left/samples_needed);
   new_dynamic = (target_dyn - start_dyn) * f + start_dyn;
   midisend(0, $xb0, target_cc, new_dynamic);
   sample_block_counter = floor( samples_per_cycle * (attack_time / (tempo / 60.0)));
   samples_left -= 1;
+)
+: state == st_decay ? (
+  decay_samples -=1;
+  state = decay_samples ? st_decay : st_init;
 );
 
