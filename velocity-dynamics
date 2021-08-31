@@ -1,10 +1,11 @@
 desc:CC2 Velocity Target
 slider1:attack_time=2<0,16>Attack Time (beats, 0=disable plugin)
-slider2:resolution=50<10,200>Resolution (ms)
-slider3:attack_time_cc=19<0,127>Attack Time CC
-slider4:dynamic_cc=1<0,127>Dynamic Input CC
-slider5:target_cc=2<0,127>Target CC to Control
-slider6:marcato_threshold=30<0,50>Auto Marcato Threshold (0=off)
+slider2:max_attack_time=4<0,16>Max Attack Time (beats)
+slider3:resolution=50<10,200>Resolution (ms)
+slider4:attack_time_cc=19<0,127>Attack Time CC
+slider5:dynamic_cc=1<0,127>Dynamic Input CC
+slider6:target_cc=2<0,127>Target CC to Control
+slider7:marcato_threshold=30<0,50>Auto Marcato Threshold (0=off)
 
 @init
 //state machine state values
@@ -77,13 +78,17 @@ function pc(articulation) (
     midisend(offset, $xC0 + chan, articulation);
 );
 
+function is_note_off(msg1, msg3) (
+  msg1 == $x80 || (msg1 == $x90 && msg3 == 0);
+);
+
 @slider
 samples_per_cycle = resolution * (srate / 1000);
 
 @block
 while (midirecv(offset,msg1,msg2,msg3)) (
   msg1 == $xb0 && msg2 == attack_time_cc ? (
-    attack_time = ceil(16*( msg3 / 127));
+    attack_time = (max_attack_time*( msg3 / 127));
   )
   : attack_time == 0 ? (
     state = st_init;
@@ -117,7 +122,7 @@ while (midirecv(offset,msg1,msg2,msg3)) (
 //    : target_dyn < 20 && msg3 < 100 ? pc(ks_fortepiano)
 //    : (
     midisend(offset, msg1, msg2, msg3);
-  ) : msg1 == $x80 && state!=st_init ? (
+  ) : is_note_off(msg1, msg3) && state!=st_init ? (
     notes_on-=1;
     notes_on==0 ? state=st_init;
     midisend(offset, msg1, msg2, msg3);
