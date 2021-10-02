@@ -1,13 +1,18 @@
-desc:Velocity Dynamics Expression
+desc:VSL SE Velocity Dynamics V2
 slider1:attack_time=2<0,16>Attack Time (beats, 0=disable plugin)
 slider2:max_attack_time=4<0,16>Max Attack Time (beats)
 slider3:attack_time_cc=19<0,127>Attack Time CC
 slider4:resolution=50<10,200>Resolution (ms)
 //slider5:attack_range=0<0,127>Attack Range Limiter (0=off)
 
-slider7:dynamic_cc=1<0,127>Dynamic Input CC
+slider7:dynamic_cc=2<0,127>Dynamic Input CC
 slider8:target_cc=2<0,127>Target CC to Control
 slider9:marcato_threshold=30<0,50>Auto Marcato Threshold (0=off)
+slider10:art_type=0<0,2,1{C1/C2,C1/C7 (Cello),C6/C7}>Articulation KS Config
+
+@slider
+dim1=(art_type < 2 ? 24 : 84);
+dim2=(art_type == 0 ? 36 : 96);
 
 @init
 //state machine state values
@@ -16,6 +21,7 @@ st_pre_attack=1;
 st_attack=2;
 st_post_attack=3;
 st_decay=4;
+st_hold_for_notation = 5;
 
 // state machine state
 state=st_init;
@@ -74,6 +80,7 @@ ks_trem_trem = $x40;
 ks_trill = $x42;
 ks_whole_trill = $x43;
 
+//Unused
 function pc(articulation) (
     midisend(offset, $xB0 + chan, 0, bank_msb);
     midisend(offset, $xB0 + chan, 32, bank_lsb);
@@ -84,12 +91,35 @@ function is_note_off(msg1, msg3) (
   msg1 == $x80 || (msg1 == $x90 && msg3 == 0);
 );
 
+function is_note_on(msg1, msg3) (
+  msg1 == $x90 && msg3 > 0;
+);
+
+function is_notation_event(msg1, msg2) (
+  msg1 == $xFF && msg2 == $x0F;
+);
+
+function blip_note(offset, note) (
+  midisend(offset, $x90, note, 127);
+  midisend(offset, $x80, note, 0);
+);
+
+function set_ks_from_pc(offset, pc) (
+    blip_note(offset, dim1 + (pc >> 4));
+    d2 = pc & 15; 
+    blip_note(offset, dim2 + d2);
+);
+
 @slider
 samples_per_cycle = resolution * (srate / 1000);
 decay_per_cycle = rebreath_time * (srate / 1000);
 
 @block
-while (midirecv(offset,msg1,msg2,msg3)) (
+while (midirecv_str(offset,#midi_str)) (
+  msg1 = str_getchar(#midi_str, 0);
+  msg2 = str_getchar(#midi_str, 1);
+  msg3 = str_getchar(#midi_str, 2);
+  
   msg1 == $xb0 && msg2 == attack_time_cc ? (
     attack_time = (max_attack_time*( msg3 / 127));
   )
@@ -100,14 +130,22 @@ while (midirecv(offset,msg1,msg2,msg3)) (
   : msg1 == $xb0 && msg2 == dynamic_cc ? (
     target_dyn = msg3;
     state == st_post_attack ? midisend(offset, msg1, target_cc, msg3);
-  ) 
+  )
+  : state == st_init && is_notation_event(msg1, msg2) ? (
+    state = st_hold_for_notation;
+    midisend_str(offset, #midi_str);
+  )
+  :state == st_hold_for_notation && is_note_on(msg1, msg3) ? (
+    state = st_init;
+    midisend(offset, msg1, msg2, msg3);
+  )
   : msg1==$x90 && msg3!=0 ? (
     state == st_init ? (
       marcato_threshold && msg3-target_dyn > marcato_threshold ? (
-        pc(ks_long_marc);
+        set_ks_from_pc(offset, ks_long_marc);
         midisend(offset, $xb0, 1, msg3);  // cc1=marcato blend
       )
-      : pc(ks_long_sus);
+      : set_ks_from_pc(offset, ks_long_sus);
       notes_on = 1;
       state=st_attack;
       start_dyn = msg3;
@@ -119,7 +157,7 @@ while (midirecv(offset,msg1,msg2,msg3)) (
     )
     : state == st_attack || state == st_post_attack ? (
       notes_on+=1;
-      pc(ks_leg_leg);
+      set_ks_from_pc(offset, ks_leg_leg);
     );
 //    : target_dyn < 20 && msg3 > 100 ? pc(ks_sfz)
 //    : target_dyn < 20 && msg3 < 100 ? pc(ks_fortepiano)
