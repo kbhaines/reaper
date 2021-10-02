@@ -1,14 +1,14 @@
-// Allow cc32: a 7 bit control value in CC32 will be interpreted
-// as follows:  top 3 bits = slot 1 (0-7), 4 bits = slot 2 (0-15)
-
+  
 
 desc:VSL SE12 Articulation Controller V2
 slider1:art_type=0<0,2,1{C1/C2,C1/C7 (Cello),C6/C7}>Articulation KS Config
 slider2:auto_xf=0<0,1,1{Off,On}>Auto-XF control
-slider3:sticky_artic=0<0,1,1{Off,On}>Sticky articulation
-slider4:allow_cc32=0<0,1,1{Off,On}>Allow CC32
 in_pin:none
 out_pin:none
+
+@slider
+dim1=(art_type < 2 ? 24 : 84);
+dim2=(art_type == 0 ? 36 : 96);
 
 @init
 ext_midi_bus = 1.0;
@@ -17,9 +17,6 @@ function blip_note(offset, note) (
   midisend(offset, $x90, note, 127);
   midisend(offset, $x80, note, 0);
 );
-dim1=(art_type < 2 ? 24 : 84);
-dim2=(art_type == 0 ? 36 : 96);
-
 // Keyswitch constants. These encode in 2x 4 bits, dimension 1
 // is in the upper 4 bits and range 0-15 (0=C1, for example). 
 // Dimension 2 is in the lower 4 bits, and range 0 to 15.
@@ -73,7 +70,7 @@ pc_art = ks_long_sus;
 active_notn_art = -1;
 
 
-art_notn = 0;
+art_notn = -1;
 note_on_ctr = 1;
 
 
@@ -172,12 +169,8 @@ while (midirecv_str(offset, #str)) (
   msg2 = str_getchar(#str, 1);
   msg3 = str_getchar(#str, 2);
   
-  // Check CC32
-  msg1 == $xB0 && msg2 == 32 && allow_cc32 ? (
-    set_ks_from_pc(offset, msg3);
-  ) :  // Look for a string event which is a notation
+  // Look for a string event which is a notation
   msg1 == $xFF && msg2 == $x0F ? (
-    _log(0,1);
     strcpy_from(#msg, #str, 2);
     art_notn = parse_notation(#msg);
     (art_notn >=0 ) ? (
@@ -194,7 +187,7 @@ while (midirecv_str(offset, #str)) (
     handle_pc(offset, msg1, msg2, msg3) == 0 ? (
       msg1 == $x90 && msg3 > 0 && note_on_ctr ? (
         note_on_ctr -=1 ;
-        note_on_ctr == 0 && !sticky_artic ? (
+        note_on_ctr == 0 ? (
           set_ks_from_pc(offset, pc_art);
           handle_xf_control(offset, "reset");
           active_notn_art = -1;
@@ -202,7 +195,7 @@ while (midirecv_str(offset, #str)) (
       );
       midisend_str(offset, #str); // passthrough other events
     ) : ( 
-      active_notn_art =0;  // PC disables active articulation
+      active_notn_art =-1;  // PC disables active articulation
     );
   );
 ); 
