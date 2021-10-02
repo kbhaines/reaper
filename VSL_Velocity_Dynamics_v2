@@ -84,8 +84,11 @@ function is_note_on(msg1, msg3) (
   msg1 == $x90 && msg3 > 0;
 );
 
-function is_notation_event(msg1, msg2) (
-  msg1 == $xFF && msg2 == $x0F;
+function is_notation_event(msg1, msg2, midi_str) (
+  msg1 == $xFF && msg2 == $x0F ? (
+    match("*custom*", midi_str) || match("*ornamnent*", midi_str) ||
+      match("*articulation*", midi_str);
+  ) : 0;
 );
 
 function blip_note(offset, note) (
@@ -120,7 +123,7 @@ while (midirecv_str(offset,#midi_str)) (
     target_dyn = msg3;
     state == st_post_attack ? midisend(offset, msg1, target_cc, msg3);
   )
-  : state == st_init && is_notation_event(msg1, msg2) ? (
+  : state == st_init && is_notation_event(msg1, msg2, #midi_str) ? (
     state = st_hold_for_notation;
     midisend_str(offset, #midi_str);
   )
