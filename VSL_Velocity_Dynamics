@@ -29,11 +29,7 @@ state=st_init;
 target_dyn=64;
 current_dyn = 0;
 notes_on=0;
-
-bank_msb=122;
-bank_lsb=1;
-chan = 0;
-
+ 
 // Keyswitch constants. These encode in 2x 4 bits, dimension 1
 // is in the upper 4 bits and range 0-15 (0=C1, for example). 
 // Dimension 2 is in the lower 4 bits, and range 0 to 15.
@@ -79,13 +75,6 @@ ks_trem_marc = $x41;
 ks_trem_trem = $x40;
 ks_trill = $x42;
 ks_whole_trill = $x43;
-
-//Unused
-function pc(articulation) (
-    midisend(offset, $xB0 + chan, 0, bank_msb);
-    midisend(offset, $xB0 + chan, 32, bank_lsb);
-    midisend(offset, $xC0 + chan, articulation);
-);
 
 function is_note_off(msg1, msg3) (
   msg1 == $x80 || (msg1 == $x90 && msg3 == 0);
