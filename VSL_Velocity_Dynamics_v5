@@ -1,4 +1,4 @@
-desc:VSL SE Velocity Dynamics V3
+desc:VSL SE Velocity Dynamics V5
 slider1:attack_time=2<0,16>Attack Time (beats, 0=disable plugin)
 slider2:max_attack_time=4<0,16>Max Attack Time (beats)
 slider3:attack_time_cc=19<0,127>Attack Time CC
@@ -28,6 +28,8 @@ state=st_init;
 target_dyn=64;
 current_dyn = 0;
 notes_on=0;
+xf_control_cc=28;
+xf_state = 0;
  
 // Keyswitch constants. These encode in 2x 4 bits, dimension 1
 // is in the upper 4 bits and range 0-15 (0=C1, for example). 
@@ -101,6 +103,18 @@ function set_ks_from_pc(offset, pc) (
     blip_note(offset, dim2 + d2);
 );
 
+function set_xf(offset) (
+  xf_state == 0 ? (
+    midisend(offset, $xb0, xf_control_cc, 127);
+  );
+);
+
+function reset_xf(offset) (
+  xf_state == 0 ? (
+    midisend(offset, $xb0, xf_control_cc, 0);
+  );
+);
+
 @slider
 samples_per_cycle = resolution * (srate / 1000);
 decay_per_cycle = rebreath_time * (srate / 1000);
@@ -122,6 +136,10 @@ while (midirecv_str(offset,#midi_str)) (
     target_dyn = msg3;
     state == st_post_attack ? midisend(offset, msg1, target_cc, msg3);
   )
+  : msg1 == $xb0 && msg2 == xf_control_cc ? (
+    xf_state = msg3 > 63;
+    midisend(offset, msg1, msg2, msg3);
+  )
   : state == st_init && is_notation_event(msg1, msg2, #midi_str) ? (
     state = st_hold_for_notation;
     midisend_str(offset, #midi_str);
@@ -133,6 +151,7 @@ while (midirecv_str(offset,#midi_str)) (
   : msg1==$x90 && msg3!=0 ? (
     state == st_init ? (
       set_ks_from_pc(offset, ks_long_sus);
+      set_xf(offset);
       notes_on = 1;
       state=st_attack;
       start_dyn = msg3;
@@ -155,6 +174,7 @@ while (midirecv_str(offset,#midi_str)) (
     notes_on==0 ? (
       state=st_init;
       decay_samples = 0;
+      reset_xf(offset);
     );
     midisend(offset, msg1, msg2, msg3);
   ) : (
