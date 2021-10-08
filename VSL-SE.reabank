@@ -4,22 +4,49 @@
 // A bank entry lists the MSB, LSB, and bank name
 // for all the patches that follow, until the next bank entry.
 
-Bank 121 1 VSL SE1 & 2
+Bank 122 1 VSL SE1/1+ & 2/2+
 
-// A program entry simply lists the program number and patch name.
+82	col_legno
 
-1	Staccato
-2	Detache
-17	Sustain
-18	Marcato
-19	XF Trem
-33	Legato
-34	Leg Sus
-34	Portamento
-49	Sforzato
-50	Sfx XF Trem
-65	Tremolo
-66	Tremolo Marcato
-80	Pizzicato
-126     Vel. XF On
-127     Vel. XF Off
+//#129	#con_sord
+//#130	#con_sord_marc
+//#128	#con_sord_stac
+//131	#con_sord_trem
+
+2	detache
+1	detache_short
+49	dyn_sfz_trem
+50	fortepiano
+51	fortepiano_trem
+97	harmonics
+98	harmonics_marc
+96	harmonics_stac
+32	leg_leg
+33	leg_port
+33	leg_sus
+2	legato_rep
+16	long
+17	long_marc
+18	long_trem
+80	pizz
+1	portato
+68	rep150
+69	rep170
+70	rep190
+48	sfz
+0	short_stac
+81	snap_pizz
+3	staccato_rep
+3	str_legato_rep
+4	str_spiccato_rep
+113	sul_pont
+114	sul_pont_marc
+112	sul_pont_stac
+115	sul_pont_trem
+65	trem_marc
+64	trem_trem
+66	trill
+67	whole_trill
+
+126     xf_on
+127     xf_off
