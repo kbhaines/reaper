@@ -1,0 +1,18 @@
+desc:Translate CC32 To PC
+slider1:bank_msb=122<0,127,1>Bank MSB
+slider2:bank_lsb=1<0,127,1>Bank LSB
+
+
+@block
+while (midirecv(offset, msg1, msg2, msg3)) (
+  // Check & Translate CC32
+  msg1 & $xF0 == $xB0 && msg2 == 32 ? (
+    chan = msg1 & 15;
+    midisend(offset, $xB0 + chan, 0, bank_msb);
+    midisend(offset, $xB0 + chan, 32, bank_lsb);
+    midisend(offset, $xC0 + chan, msg3);
+  ) : (
+    midisend(offset, msg1, msg2, msg3);
+  );
+);
+
