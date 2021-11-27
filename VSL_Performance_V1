@@ -108,6 +108,9 @@ base_art = 0;
 // count number of notes currently on
 notes_on=0;
 
+// true if currently playing a trill
+trilling = 0;
+
 // save values for 1st and 2nd notes currently being played
 // for determining when to trigger trills
 note1 = 0;
@@ -184,6 +187,11 @@ function set_next_articulation(new) (
     : new == ks_long_marc ? ks_con_sord_marc
     : new == ks_long_trem ? ks_con_sord_trem
     : ks_con_sord;
+  )
+  : new != ks_whole_trill && new != ks_trill ? (
+    cc_trem_value > 0 && cc_marc_value > 0 ?  new = ks_trem_marc
+    : cc_trem_value > 0 ? new = ks_long_trem
+    : cc_marc_value > 0 ? new = ks_long_marc;
   );
   next_art = new;
   new;
@@ -233,52 +241,12 @@ function articulation_state_machine(offset, msg1, msg2, msg3, midi_str) (
   : state == st_hold_for_notation && event==ev_note_on ? (
     state = st_init;
   )
-  : state == st_init ? (
-    event == ev_cc_trem && cc_trem_value ? (
-      state = st_trem;
-      set_next_articulation(ks_long_trem);
-    )
-    : event == ev_cc_marc && cc_marc_value ? (
-      state = st_marc;
-      set_next_articulation(ks_long_marc);
-    )
-    : event == ev_note_on ? (
-      notes_on = 1;
-      note1 = msg2;
-      note1_velocity = msg3;
-      state = st_note1;
-      set_next_articulation(ks_long_sus);
-    );
-  )
-  : state == st_marc ? (
-    event == ev_cc_trem && cc_trem_value ? (
-      state = st_trem_marc;
-      set_next_articulation(ks_trem_marc);
-    )
-    : event == ev_cc_marc && !cc_marc_value ? (
-      state = st_init;
-      set_next_articulation(ks_long_sus);
-    );
-  )
-  : state == st_trem ? (
-    event == ev_cc_marc && cc_marc_value ? (
-      state = st_trem_marc;
-      set_next_articulation(ks_trem_marc);
-    )
-    : event == ev_cc_trem && !cc_trem_value ? (
-      state = st_init;
-      set_next_articulation(ks_long_sus);
-    );
-  )
-  : state == st_trem_marc ? (
-    event == ev_cc_trem && !cc_trem_value ? (
-      state = st_marc;
-      set_next_articulation(ks_long_marc);
-    )
-    : event == ev_cc_marc && !cc_marc_value ? (
-      state = st_trem;
-      set_next_articulation(ks_long_trem);
-    )
+  : state == st_init && event == ev_note_on ? (
+    notes_on = 1;
+    note1 = msg2;
+    note1_velocity = msg3;
+    state = st_note1;
+    set_next_articulation(ks_long_sus);
   )
   : state == st_note1 ? (
     event == ev_note_on ? (
@@ -286,24 +254,13 @@ function articulation_state_machine(offset, msg1, msg2, msg3, midi_str) (
       note2 = msg2;
       note2_velocity = msg3;
       state = st_note2;
-      set_next_articulation(ks_leg_leg);
+      trilling == 0 ? set_next_articulation(ks_leg_leg);
     )
     : event == ev_note_off ? (
       notes_on = 0;
+      trilling = 0;
       state = st_init;
-      set_next_articulation(ks_long_sus);
     ) 
-    : event == ev_cc_trem && cc_trem_value ? (
-      state = st_trem;
-      set_next_articulation(ks_long_trem);
-      notes_on=0;
-    )
-    : event == ev_cc_marc && cc_marc_value ? (
-      state = st_marc;
-      set_next_articulation(ks_long_marc);
-      notes_on=0;
-    )
-
   )
   : state == st_note2 ? (
     event == ev_note_on ? (
@@ -321,10 +278,15 @@ function articulation_state_machine(offset, msg1, msg2, msg3, midi_str) (
       state = st_note1;
     )
     : event == ev_note_off && (msg2 == note2) && (note2 > note1 && note2-note1 < 3) ? (
+      midisend(offset, $x80, note1, 0);
       set_next_articulation(note2-note1 == 1 ? ks_trill : ks_whole_trill);
+
+      trilling = 1;
       set_articulation();
+
       midisend(offset, $x90, note1, note1_velocity);
-      state = st_trill1;
+
+      state = st_note1;
       notes_on = 1;
     )
     : event == ev_note_off && (msg2 == note2) && (note2-note1 > 2) ? (
@@ -333,39 +295,8 @@ function articulation_state_machine(offset, msg1, msg2, msg3, midi_str) (
       state = st_note1;
     )
     : event == ev_note_off ? (
-      notes_on == 2 ? (
-        notes_on = 1;
-        state = st_note1;
-        set_next_articulation(ks_leg_leg);
-      ) 
-      : notes_on -= 1;
-    )
-    : event == ev_cc_trem && cc_trem_value ? (
-      state = st_trem;
-      set_next_articulation(ks_trem_trem);
-    )
-    : event == ev_cc_marc && cc_marc_value ? (
-      state = st_marc;
-      set_next_articulation(ks_long_marc);
-    )
-  )
-  : state == st_trill1 ? (
-    event == ev_note_off ? (
-      state = st_init;
-      notes_on = 0;
-    )
-    : event == ev_note_on ? (
-      notes_on += 1;
-      state = st_trill2;
-    )
-  )
-  : state == st_trill2 ? (
-    event == ev_note_on ? (
-      notes_on += 1;
-    )
-    : event == ev_note_off ? (
       notes_on -= 1;
-      state = notes_on == 1 ? st_trill1 : st_trill2;
+      state = notes_on == 1 ? st_note1 : st_note2;
     )
   );
   passthru;
