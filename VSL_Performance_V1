@@ -1,0 +1,461 @@
+desc:VSL SE Performance Controller V1
+
+//slider1:attack_time=0<0,16>Attack Time (beats, 0=disable dynamics)
+//slider2:max_attack_time=4<0,16>Max Attack Time (beats)
+//slider3:attack_time_cc=19<0,127>Attack Time CC
+//slider4:resolution=50<10,200>Resolution (ms)
+//slider5:attack_range=0<0,127>Attack Range Limiter (0=off)
+//slider7:dynamic_cc=2<0,127>Dynamic Input CC
+//slider8:target_cc=2<0,127>Target CC to Control
+
+slider9:art_type=0<0,2,1{C1/C2,C1/C7 (Cello),C6/C7}>Articulation KS Config
+slider10:auto_xf_off=1<0,2,1{No,Yes}>Auto XF off for shorts
+
+slider11:sustain_zone1=20<0,127>Sustain Zone 1 start
+slider12:sustain_zone1_art=2<0,99>Sustain Zone 1 articulation (decimal)
+slider13:sustain_zone2=64<0,127>Sustain Zone 2 start
+slider14:sustain_zone2_art=0<0,99>Sustain Zone 2 articulation (decimal)
+
+@slider
+dim1=(art_type < 2 ? 24 : 84);
+dim2=(art_type == 0 ? 36 : 96);
+
+@init
+// articulation state machine state values
+st_init=0;
+st_long=1;
+st_legato=2;
+st_trill=3;
+st_marc=4;
+st_trem=5;
+st_trem_marc=6;
+st_note1 = 7;
+st_note2 = 8;
+st_trill1 = 9;
+st_trill2 = 10;
+st_hold_for_notation = 19;
+
+// dynamics state machine state values
+dyn_st_init=0;
+dyn_st_pre_attack=1;
+dyn_st_attack=2;
+dyn_st_post_attack=3;
+dyn_st_decay=4;
+
+target_dyn=64;
+current_dyn = 0;
+
+// Keyswitch constants. These encode in 2x 4 bits, dimension 1
+// is in the upper 4 bits and range 0-15 (0=C1, for example). 
+// Dimension 2 is in the lower 4 bits, and range 0 to 15.
+// So 0x21 = notes D1 + C#2 in an instrument with C1/C2 style 
+// keyswitches. It's harlmess to send an unused dimension note.
+ks_col_legno = $x52;
+ks_con_sord = $x81;
+ks_con_sord_marc = $x82;
+ks_con_sord_stac = $x80;
+ks_con_sord_trem = $x83;
+ks_detache = $x02;
+ks_detache_short = $x01;
+ks_dyn_sfz_trem = $x31;
+ks_fortepiano = $x32;
+ks_fortepiano_trem = $x33;
+ks_harmonics = $x61;
+ks_harmonics_marc = $x62;
+ks_harmonics_stac = $x60;
+ks_leg_leg = $x20;
+ks_leg_port = $x21;
+ks_leg_sus = $x21;
+ks_legato_rep = $x2;
+ks_long_marc = $x11;
+ks_long_sus = $x10;
+ks_long_trem = $x12;
+ks_pizz = $x50;
+ks_portato = $x01;
+ks_rep150 = $x44;
+ks_rep170 = $x45;
+ks_rep190 = $x46;
+ks_sfz = $x30;
+ks_short_stac = $x0;
+ks_snap_pizz = $x51;
+ks_staccato_rep = $x3;
+ks_str_legato_rep = $x3;
+ks_str_spiccato_rep = $x4;
+ks_sul_pont = $x71;
+ks_sul_pont_marc = $x72;
+ks_sul_pont_stac = $x70;
+ks_sul_pont_trem = $x73;
+ks_trem_marc = $x41;
+ks_trem_trem = $x40;
+ks_trill = $x42;
+ks_whole_trill = $x43;
+
+soft_cc = 67;
+susten_cc = 66;
+
+// state machine state
+state=st_init;
+
+// dynamics state
+dyn_state = dyn_st_init;
+
+// Current articulation and the next articulation that should be activated when
+// a note is played.
+art = 0;
+next_art = 0;
+base_art = 0;
+
+// count number of notes currently on
+notes_on=0;
+
+// save values for 1st and 2nd notes currently being played
+// for determining when to trigger trills
+note1 = 0;
+note1_velocity = 0;
+note2 = 0;
+
+xf_control_cc=28;
+xf_state = 0;
+
+sustain_cc=64;
+sustain_amount = 0;
+soft=0;
+susten=0;
+ 
+// VSL definitions for marcato and tremolo
+cc_marc = 1;
+cc_trem = 20;
+
+function is_note_off(msg1, msg3) (
+  msg1 == $x80 || (msg1 == $x90 && msg3 == 0);
+);
+
+function is_note_on(msg1, msg3) (
+  msg1 == $x90 && msg3 > 0;
+);
+
+function is_notation_event(msg1, msg2, midi_str) (
+  msg1 == $xFF && msg2 == $x0F ? (
+    match("*custom*", midi_str) || match("*ornamnent*", midi_str) ||
+      match("*articulation*", midi_str);
+  ) : 0;
+);
+
+function blip_note(offset, note) (
+  midisend(offset, $x90, note, 127);
+  midisend(offset, $x80, note, 0);
+);
+
+function set_ks_from_pc(offset, pc) (
+    blip_note(offset, dim1 + (pc >> 4));
+    d2 = pc & 15; 
+    blip_note(offset, dim2 + d2);
+);
+
+function clear_xf(offset) (
+  xf_state ? (
+    midisend(offset, $xb0, xf_control_cc, 0);
+  );
+);
+
+function set_xf(offset) (
+  !xf_state ? (
+    midisend(offset, $xb0, xf_control_cc, 127);
+  );
+);
+
+function reset_xf(offset) (
+  midisend(offset, $xb0, xf_control_cc, xf_state ? 127 : 0);
+);
+
+function is_cc(cc_id, msg1, msg2) (
+  msg1 == $xb0 && msg2 == cc_id;
+);
+
+function set_next_articulation(new) (
+  base_art = new;
+  sustain_amount > 0 ? (
+    new = soft ? ks_con_sord_stac
+    : sustain_amount > sustain_zone2 ? sustain_zone2_art
+    : sustain_amount > sustain_zone1 ? sustain_zone1_art;
+  )
+  : soft ? (
+    new = new == ks_leg_leg || new == ks_long_sus ? ks_con_sord
+    : new == ks_long_marc ? ks_con_sord_marc
+    : new == ks_long_trem ? ks_con_sord_trem
+    : ks_con_sord;
+  );
+  next_art = new;
+  new;
+);
+
+function set_articulation() (
+  art != next_art ? (
+    art = next_art;
+    set_ks_from_pc(offset, art);
+  );
+);
+
+ev_note_on = 0;
+ev_note_off = 1;
+ev_cc_trem = 2;
+ev_cc_marc = 3;
+ev_notation = 4;
+
+cc_trem_value = 0;
+cc_marc_value = 0;
+
+function articulation_state_machine(offset, msg1, msg2, msg3, midi_str) (
+  passthru = 1;
+  event = is_note_on(msg1, msg3) ? ev_note_on
+    : is_note_off(msg1, msg3) ? ev_note_off
+    : is_notation_event(msg1, msg2, #midi_str) ? ev_notation
+    : is_cc(cc_trem, msg1, msg2) ? (cc_trem_value = msg3; ev_cc_trem)
+    : is_cc(cc_marc, msg1, msg2) ? (cc_marc_value = msg3; ev_cc_marc)
+    : -1;
+
+  is_cc(xf_control_cc, msg1, msg2) ? (
+    xf_state = msg3 > 63;
+  )
+  : is_cc(sustain_cc, msg1, msg2) ? (
+    sustain_amount = msg3;
+    set_next_articulation(base_art);
+    passthru = 0;
+  )
+  : is_cc(soft_cc, msg1, msg2) ? (
+    soft = msg3 > 64;
+    passthru = 0;
+    set_next_articulation(base_art);
+  )
+  : state == st_init && event==ev_notation ? (
+    state = st_hold_for_notation;
+  )
+  : state == st_hold_for_notation && event==ev_note_on ? (
+    state = st_init;
+  )
+  : state == st_init ? (
+    event == ev_cc_trem && cc_trem_value ? (
+      state = st_trem;
+      set_next_articulation(ks_long_trem);
+    )
+    : event == ev_cc_marc && cc_marc_value ? (
+      state = st_marc;
+      set_next_articulation(ks_long_marc);
+    )
+    : event == ev_note_on ? (
+      notes_on = 1;
+      note1 = msg2;
+      note1_velocity = msg3;
+      state = st_note1;
+      set_next_articulation(ks_long_sus);
+    );
+  )
+  : state == st_marc ? (
+    event == ev_cc_trem && cc_trem_value ? (
+      state = st_trem_marc;
+      set_next_articulation(ks_trem_marc);
+    )
+    : event == ev_cc_marc && !cc_marc_value ? (
+      state = st_init;
+      set_next_articulation(ks_long_sus);
+    );
+  )
+  : state == st_trem ? (
+    event == ev_cc_marc && cc_marc_value ? (
+      state = st_trem_marc;
+      set_next_articulation(ks_trem_marc);
+    )
+    : event == ev_cc_trem && !cc_trem_value ? (
+      state = st_init;
+      set_next_articulation(ks_long_sus);
+    );
+  )
+  : state == st_trem_marc ? (
+    event == ev_cc_trem && !cc_trem_value ? (
+      state = st_marc;
+      set_next_articulation(ks_long_marc);
+    )
+    : event == ev_cc_marc && !cc_marc_value ? (
+      state = st_trem;
+      set_next_articulation(ks_long_trem);
+    )
+  )
+  : state == st_note1 ? (
+    event == ev_note_on ? (
+      notes_on = 2;
+      note2 = msg2;
+      note2_velocity = msg3;
+      state = st_note2;
+      set_next_articulation(ks_leg_leg);
+    )
+    : event == ev_note_off ? (
+      notes_on = 0;
+      state = st_init;
+      set_next_articulation(ks_long_sus);
+    ) 
+    : event == ev_cc_trem && cc_trem_value ? (
+      state = st_trem;
+      set_next_articulation(ks_long_trem);
+      notes_on=0;
+    )
+    : event == ev_cc_marc && cc_marc_value ? (
+      state = st_marc;
+      set_next_articulation(ks_long_marc);
+      notes_on=0;
+    )
+
+  )
+  : state == st_note2 ? (
+    event == ev_note_on ? (
+      notes_on += 1;
+      note1 = note2;
+      note1_velocity = note2_velocity;
+      note2 = msg2;
+      note2_velocity = msg3;
+      set_next_articulation(ks_leg_leg);
+    )
+    : event == ev_note_off && (msg2 == note1) ? (
+      note1 = note2;
+      note1_velocity = note2_velocity;
+      notes_on = 1;
+      state = st_note1;
+    )
+    : event == ev_note_off && (msg2 == note2) && (note2 > note1 && note2-note1 < 3) ? (
+      set_next_articulation(note2-note1 == 1 ? ks_trill : ks_whole_trill);
+      set_articulation();
+      midisend(offset, $x90, note1, note1_velocity);
+      state = st_trill1;
+      notes_on = 1;
+    )
+    : event == ev_note_off && (msg2 == note2) && (note2-note1 > 2) ? (
+      midisend(offset, $x90, note1, note1_velocity);
+      notes_on = 1;
+      state = st_note1;
+    )
+    : event == ev_note_off ? (
+      notes_on == 2 ? (
+        notes_on = 1;
+        state = st_note1;
+        set_next_articulation(ks_leg_leg);
+      ) 
+      : notes_on -= 1;
+    )
+    : event == ev_cc_trem && cc_trem_value ? (
+      state = st_trem;
+      set_next_articulation(ks_trem_trem);
+    )
+    : event == ev_cc_marc && cc_marc_value ? (
+      state = st_marc;
+      set_next_articulation(ks_long_marc);
+    )
+  )
+  : state == st_trill1 ? (
+    event == ev_note_off ? (
+      state = st_init;
+      notes_on = 0;
+    )
+    : event == ev_note_on ? (
+      notes_on += 1;
+      state = st_trill2;
+    )
+  )
+  : state == st_trill2 ? (
+    event == ev_note_on ? (
+      notes_on += 1;
+    )
+    : event == ev_note_off ? (
+      notes_on -= 1;
+      state = notes_on == 1 ? st_trill1 : st_trill2;
+    )
+  );
+  passthru;
+);
+
+//function dynamics_state_machine(offset, msg1, msg2, msg3) (
+//  passthru = 1;
+//  msg1 == $xb0 && msg2 == dynamic_cc && attack_time ? (
+//    target_dyn = msg3;
+//    passthru = 0;
+//  );
+//  msg1 == $xb0 && msg2 == attack_time_cc ? (
+//    attack_time = (max_attack_time*( msg3 / 127));
+//  )
+//  : dyn_state == dyn_st_init && is_note_on(msg1, msg3) && attack_time ? (
+//    set_xf(offset);
+//    start_dyn = msg3;
+//    beats_per_second = tempo / 60.0;
+//    samples_needed = floor((attack_time / beats_per_second) * srate);
+//    samples_left = samples_needed;
+//    sample_block_counter = 0;
+//    dyn_state=dyn_st_attack;
+//    //sample_counter  = samples_per_cycle * (attack_time / (tempo / ts_denom / 60.0));
+//  ) 
+//  : dyn_state == dyn_st_attack ? (
+//    msg1 == $xb0 && msg2 == dynamic_cc ? ( 
+//      target_dyn = msg3;
+//      passthru = 0;
+//    );
+//  )
+//  : dyn_state == dyn_st_post_attack ? (
+//    msg1 == $xb0 && msg2 == dynamic_cc ? ( 
+//     midisend(offset, msg1, target_cc, msg3);
+//     target_dyn = msg3;
+//     passthru = 0;
+//    )
+//    : notes_on == 0 ? (
+//      decay_samples = 0;
+//      reset_xf(offset);
+//      dyn_state=dyn_st_init;
+//    );
+//  );
+//  passthru;
+//);
+
+function is_short_art(art) (
+  section = art & $xF0;
+  section == 0 || section == $x50 || art == ks_con_sord_stac || 
+    art == ks_harmonics_stac || art == ks_sul_pont_stac;
+);
+
+@slider
+samples_per_cycle = resolution * (srate / 1000);
+decay_per_cycle = rebreath_time * (srate / 1000);
+
+@block
+while (midirecv_str(offset,#midi_str)) (
+  msg1 = str_getchar(#midi_str, 0);
+  msg2 = str_getchar(#midi_str, 1);
+  msg3 = str_getchar(#midi_str, 2);
+  
+  passthru = articulation_state_machine(offset, msg1, msg2, msg3, #midi_str);
+    //& dynamics_state_machine(offset, msg1, msg2, msg3);
+
+  is_note_on(msg1, msg3) ? (
+    set_articulation();
+    auto_xf_off && is_short_art(art) ? clear_xf(offset) : reset_xf(offset);
+  );
+  passthru ? midisend_str(offset,#midi_str); 
+);
+    
+
+//@sample
+//dyn_state == dyn_st_attack && !samples_left ? (
+//  dyn_state = dyn_st_post_attack;
+//) 
+//: dyn_state == dyn_st_attack && sample_block_counter ? (
+//  sample_block_counter -= 1;
+//  samples_left -= 1;
+//) 
+//: dyn_state == dyn_st_attack ? (
+//  f = 1-(samples_left/samples_needed);
+//  new_dynamic = (target_dyn - start_dyn) * f + start_dyn;
+//  midisend(0, $xb0, target_cc, new_dynamic);
+//  sample_block_counter = floor( samples_per_cycle * (attack_time / (tempo / 60.0)));
+//  samples_left -= 1;
+//)
+//: dyn_state == dyn_st_decay ? (
+//  decay_samples -=1;
+//  dyn_state = decay_samples ? dyn_st_decay : dyn_st_init;
+//);
+//
+//
