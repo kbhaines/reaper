@@ -183,9 +183,8 @@ function set_next_articulation(new) (
     : sustain_amount > sustain_zone1 ? sustain_zone1_art;
   )
   : soft ? (
-    new = new == ks_leg_leg || new == ks_long_sus ? ks_con_sord
-    : new == ks_long_marc ? ks_con_sord_marc
-    : new == ks_long_trem ? ks_con_sord_trem
+    new = cc_marc_value ? ks_con_sord_marc
+    : cc_trem_value ? ks_con_sord_trem
     : ks_con_sord;
   )
   : new != ks_whole_trill && new != ks_trill ? (
