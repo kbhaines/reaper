@@ -9,12 +9,19 @@ desc:VSL SE Performance Controller V1
 //slider8:target_cc=2<0,127>Target CC to Control
 
 slider9:art_type=0<0,2,1{C1/C2,C1/C7 (Cello),C6/C7}>Articulation KS Config
-slider10:auto_xf_off=1<0,2,1{No,Yes}>Auto XF off for shorts
+slider10:auto_xf_off=0<0,2,1{No,Yes}>Auto XF off for shorts
 
-slider11:sustain_zone1=20<0,127>Sustain Zone 1 start
-slider12:sustain_zone1_art=2<0,99>Sustain Zone 1 articulation (decimal)
-slider13:sustain_zone2=64<0,127>Sustain Zone 2 start
-slider14:sustain_zone2_art=0<0,99>Sustain Zone 2 articulation (decimal)
+slider11:sustain_cc=64<0,127>Sustain CC
+slider12:sustain_zone1=20<0,127>Sustain Zone 1 start
+slider13:sustain_zone1_art=2<0,99>Sustain Zone 1 articulation (decimal)
+slider14:sustain_zone2=64<0,127>Sustain Zone 2 start
+slider15:sustain_zone2_art=0<0,99>Sustain Zone 2 articulation (decimal)
+
+slider19:consord_cc=67<0,127>Con Sord CC
+slider20:sulpont_cc=0<0,127>Sul Pont CC
+slider21:harmonics_cc=0<0,127>Harmonic CC
+
+slider25:bypass_leg_cc=66<0,127>Chord Mode (Bypass Legato) CC
 
 @slider
 dim1=(art_type < 2 ? 24 : 84);
@@ -90,8 +97,6 @@ ks_trem_trem = $x40;
 ks_trill = $x42;
 ks_whole_trill = $x43;
 
-soft_cc = 67;
-susten_cc = 66;
 
 // state machine state
 state=st_init;
@@ -120,14 +125,17 @@ note2 = 0;
 xf_control_cc=28;
 xf_state = 0;
 
-sustain_cc=64;
 sustain_amount = 0;
-soft=0;
-susten=0;
+
+consord=0;
+sulpont=0;
+harmonics=0;
+bypass_legato=0;
  
-// VSL definitions for marcato and tremolo
+// VSL definitions for CC
 cc_marc = 1;
 cc_trem = 20;
+cc_xf = 2;
 
 function is_note_off(msg1, msg3) (
   msg1 == $x80 || (msg1 == $x90 && msg3 == 0);
@@ -172,20 +180,30 @@ function reset_xf(offset) (
 );
 
 function is_cc(cc_id, msg1, msg2) (
-  msg1 == $xb0 && msg2 == cc_id;
+  msg1 == $xb0 && msg2 && msg2 == cc_id;
 );
 
 function set_next_articulation(new) (
   base_art = new;
   sustain_amount > 0 ? (
-    new = soft ? ks_con_sord_stac
+    new = consord ? ks_con_sord_stac
+    : sulpont ? ks_sul_pont_stac
+    : harmonics ? ks_harmonics_stac
     : sustain_amount > sustain_zone2 ? sustain_zone2_art
     : sustain_amount > sustain_zone1 ? sustain_zone1_art;
   )
-  : soft ? (
+  : consord ? (
     new = cc_marc_value ? ks_con_sord_marc
     : cc_trem_value ? ks_con_sord_trem
     : ks_con_sord;
+  )
+  : sulpont ? (
+    new = cc_marc_value ? ks_sul_pont_marc
+    : cc_trem_value ? ks_sul_pont_trem
+    : ks_sul_pont;
+  )
+  : harmonics ? (
+    new = cc_marc_value ? ks_harmonics_marc : ks_harmonics;
   )
   : new != ks_whole_trill && new != ks_trill ? (
     cc_trem_value > 0 && cc_marc_value > 0 ?  new = ks_trem_marc
@@ -221,6 +239,11 @@ function articulation_state_machine(offset, msg1, msg2, msg3, midi_str) (
     : is_cc(cc_marc, msg1, msg2) ? (cc_marc_value = msg3; ev_cc_marc)
     : -1;
 
+  !xf_state && is_cc(cc_xf, msg1, msg2) && msg3 > 0  ? (
+    xf_state = 1;
+    reset_xf();
+  );
+
   is_cc(xf_control_cc, msg1, msg2) ? (
     xf_state = msg3 > 63;
   )
@@ -229,8 +252,23 @@ function articulation_state_machine(offset, msg1, msg2, msg3, midi_str) (
     set_next_articulation(base_art);
     passthru = 0;
   )
-  : is_cc(soft_cc, msg1, msg2) ? (
-    soft = msg3 > 64;
+  : is_cc(consord_cc, msg1, msg2) ? (
+    consord = msg3 > 64;
+    passthru = 0;
+    set_next_articulation(base_art);
+  )
+  : is_cc(sulpont_cc, msg1, msg2) ? (
+    sulpont = msg3 > 64;
+    passthru = 0;
+    set_next_articulation(base_art);
+  )
+  : is_cc(harmonics_cc, msg1, msg2) ? (
+    harmonics = msg3 > 64;
+    passthru = 0;
+    set_next_articulation(base_art);
+  )
+  : is_cc(bypass_leg_cc, msg1, msg2) ? (
+    bypass_legato = msg3 > 64;
     passthru = 0;
     set_next_articulation(base_art);
   )
@@ -248,7 +286,7 @@ function articulation_state_machine(offset, msg1, msg2, msg3, midi_str) (
     set_next_articulation(ks_long_sus);
   )
   : state == st_note1 ? (
-    event == ev_note_on ? (
+    event == ev_note_on && !bypass_legato ? (
       notes_on = 2;
       note2 = msg2;
       note2_velocity = msg3;
@@ -344,7 +382,7 @@ function articulation_state_machine(offset, msg1, msg2, msg3, midi_str) (
 function is_short_art(art) (
   section = art & $xF0;
   section == 0 || section == $x50 || art == ks_con_sord_stac || 
-    art == ks_harmonics_stac || art == ks_sul_pont_stac;
+    art == ks_harmonics_stac || art == ks_sul_pont_stac || art == ks_harmonics_stac;
 );
 
 @slider
@@ -362,7 +400,9 @@ while (midirecv_str(offset,#midi_str)) (
 
   is_note_on(msg1, msg3) ? (
     set_articulation();
-    auto_xf_off && is_short_art(art) ? clear_xf(offset) : reset_xf(offset);
+    auto_xf_off ? ( 
+      is_short_art(art) ? clear_xf(offset) : reset_xf(offset);
+    );
   );
   passthru ? midisend_str(offset,#midi_str); 
 );
