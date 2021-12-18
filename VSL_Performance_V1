@@ -1,4 +1,4 @@
-desc:VSL SE Performance Controller V1
+desc:VSL SE Performance Controller V2
 
 //slider1:attack_time=0<0,16>Attack Time (beats, 0=disable dynamics)
 //slider2:max_attack_time=4<0,16>Max Attack Time (beats)
@@ -41,16 +41,6 @@ st_note2 = 8;
 st_trill1 = 9;
 st_trill2 = 10;
 st_hold_for_notation = 19;
-
-// dynamics state machine state values
-dyn_st_init=0;
-dyn_st_pre_attack=1;
-dyn_st_attack=2;
-dyn_st_post_attack=3;
-dyn_st_decay=4;
-
-target_dyn=64;
-current_dyn = 0;
 
 // Keyswitch constants. These encode in 2x 4 bits, dimension 1
 // is in the upper 4 bits and range 0-15 (0=C1, for example). 
@@ -101,9 +91,6 @@ ks_whole_trill = $x43;
 // state machine state
 state=st_init;
 
-// dynamics state
-dyn_state = dyn_st_init;
-
 // Current articulation and the next articulation that should be activated when
 // a note is played.
 art = 0;
@@ -137,6 +124,54 @@ cc_marc = 1;
 cc_trem = 20;
 cc_xf = 2;
 
+// returns an articulation code based on the string passed, or
+// -1 if the string wasn't matched. It's not an optimum solution
+// but works fine.
+function parse_notation(msg) (
+  artic = -1;
+  match("*custom sfz", msg) ? artic = ks_sfz;
+  match("*custom pizz", msg) ? artic = ks_pizz;
+  match("*custom rep150", msg) ? artic = ks_rep150;
+  match("*custom rep170", msg) ? artic = ks_rep170;
+  match("*custom rep190", msg) ? artic = ks_rep190;
+  match("*custom detache", msg) ? artic = ks_detache;
+  match("*ornament snap", msg) ? artic = ks_snap_pizz;
+  match("*ornament trill", msg) ? artic = ks_trill;
+  match("*ornament pluck", msg) ? artic = ks_pizz;
+  match("*custom sul-pont", msg) ? artic = ks_sul_pont;
+  match("*phrase %d slur*", msg) ? artic = ks_leg_leg;
+  match("*custom snap-pizz", msg) ? artic = ks_snap_pizz;
+  match("*custom col-legno", msg) ? artic = ks_col_legno;
+  match("*custom harmonics", msg) ? artic = ks_harmonics;
+  match("*ornament tremolo", msg) ? artic = ks_trem_trem;
+  match("*custom fortepiano", msg) ? artic = ks_fortepiano;
+  match("*custom con-sordino", msg) ? artic = ks_con_sord;
+  match("*custom rep phrase*", msg) ? artic = ks_legato_rep;
+  match("*custom sus phrase*", msg) ? artic = ks_leg_sus;
+  match("*custom detache-short", msg) ? artic = ks_detache_short;
+  match("*articulation portato", msg) ? artic = ks_portato;
+  match("*articulation marcato", msg) ? artic = ks_long_marc;
+  match("*articulation staccato", msg) ? artic = ks_short_stac;
+  match("*custom str-rep phrase*", msg) ? artic = ks_str_legato_rep;
+  match("*ornament whole_note_trill", msg) ? artic = ks_whole_trill;
+  match("*custom xf ornament tremolo", msg) ? artic = ks_long_trem;
+  match("*custom sfz ornament tremolo", msg) ? artic = ks_dyn_sfz_trem;
+  match("*phrase %d slur*technique bend", msg) ? artic = ks_leg_port;
+  match("*custom sul-pont ornament tremolo", msg) ? artic = ks_sul_pont_trem;
+  match("*custom rep articulation staccato", msg) ? artic = ks_staccato_rep;
+  match("*custom fortepiano ornament tremolo", msg) ? artic = ks_fortepiano_trem;
+  match("*custom con-sordino ornament tremolo", msg) ? artic = ks_con_sord_trem;
+  match("*custom str-rep articulation staccato", msg) ? artic = ks_str_spiccato_rep;
+  match("*custom sul-pont articulation marcato", msg) ? artic = ks_sul_pont_marc;
+  match("*custom harmonics articulation marcato", msg) ? artic = ks_harmonics_marc;
+  match("*custom sul-pont articulation staccato", msg) ? artic = ks_sul_pont_stac;
+  match("*articulation marcato ornament tremolo", msg) ? artic = ks_trem_marc;
+  match("*custom harmonics articulation staccato", msg) ? artic = ks_harmonics_stac;
+  match("*custom con-sordino articulation marcato", msg) ? artic = ks_con_sord_marc;
+  match("*custom con-sordino articulation staccato", msg) ? artic = ks_con_sord_stac;
+  artic;
+);
+
 function is_note_off(msg1, msg3) (
   msg1 == $x80 || (msg1 == $x90 && msg3 == 0);
 );
@@ -145,11 +180,8 @@ function is_note_on(msg1, msg3) (
   msg1 == $x90 && msg3 > 0;
 );
 
-function is_notation_event(msg1, msg2, midi_str) (
-  msg1 == $xFF && msg2 == $x0F ? (
-    match("*custom*", midi_str) || match("*ornamnent*", midi_str) ||
-      match("*articulation*", midi_str);
-  ) : 0;
+function is_notation_event(msg1, msg2) (
+  msg1 == $xFF && msg2 == $x0F;
 );
 
 function blip_note(offset, note) (
@@ -181,6 +213,12 @@ function reset_xf(offset) (
 
 function is_cc(cc_id, msg1, msg2) (
   msg1 == $xb0 && msg2 && msg2 == cc_id;
+);
+
+function is_short_art(art) (
+  section = art & $xF0;
+  section == 0 || section == $x50 || art == ks_con_sord_stac || 
+    art == ks_harmonics_stac || art == ks_sul_pont_stac || art == ks_harmonics_stac;
 );
 
 function set_next_articulation(new) (
@@ -234,7 +272,7 @@ function articulation_state_machine(offset, msg1, msg2, msg3, midi_str) (
   passthru = 1;
   event = is_note_on(msg1, msg3) ? ev_note_on
     : is_note_off(msg1, msg3) ? ev_note_off
-    : is_notation_event(msg1, msg2, #midi_str) ? ev_notation
+    : is_notation_event(msg1, msg2) ? ev_notation
     : is_cc(cc_trem, msg1, msg2) ? (cc_trem_value = msg3; ev_cc_trem)
     : is_cc(cc_marc, msg1, msg2) ? (cc_marc_value = msg3; ev_cc_marc)
     : -1;
@@ -244,7 +282,11 @@ function articulation_state_machine(offset, msg1, msg2, msg3, midi_str) (
     reset_xf();
   );
 
-  is_cc(xf_control_cc, msg1, msg2) ? (
+  event==ev_notation ? (
+    next_art = parse_notation(midi_str);
+    state = st_hold_for_notation;
+  )
+  : is_cc(xf_control_cc, msg1, msg2) ? (
     xf_state = msg3 > 63;
   )
   : is_cc(sustain_cc, msg1, msg2) ? (
@@ -271,9 +313,6 @@ function articulation_state_machine(offset, msg1, msg2, msg3, midi_str) (
     bypass_legato = msg3 > 64;
     passthru = 0;
     set_next_articulation(base_art);
-  )
-  : state == st_init && event==ev_notation ? (
-    state = st_hold_for_notation;
   )
   : state == st_hold_for_notation && event==ev_note_on ? (
     state = st_init;
@@ -339,52 +378,6 @@ function articulation_state_machine(offset, msg1, msg2, msg3, midi_str) (
   passthru;
 );
 
-//function dynamics_state_machine(offset, msg1, msg2, msg3) (
-//  passthru = 1;
-//  msg1 == $xb0 && msg2 == dynamic_cc && attack_time ? (
-//    target_dyn = msg3;
-//    passthru = 0;
-//  );
-//  msg1 == $xb0 && msg2 == attack_time_cc ? (
-//    attack_time = (max_attack_time*( msg3 / 127));
-//  )
-//  : dyn_state == dyn_st_init && is_note_on(msg1, msg3) && attack_time ? (
-//    set_xf(offset);
-//    start_dyn = msg3;
-//    beats_per_second = tempo / 60.0;
-//    samples_needed = floor((attack_time / beats_per_second) * srate);
-//    samples_left = samples_needed;
-//    sample_block_counter = 0;
-//    dyn_state=dyn_st_attack;
-//    //sample_counter  = samples_per_cycle * (attack_time / (tempo / ts_denom / 60.0));
-//  ) 
-//  : dyn_state == dyn_st_attack ? (
-//    msg1 == $xb0 && msg2 == dynamic_cc ? ( 
-//      target_dyn = msg3;
-//      passthru = 0;
-//    );
-//  )
-//  : dyn_state == dyn_st_post_attack ? (
-//    msg1 == $xb0 && msg2 == dynamic_cc ? ( 
-//     midisend(offset, msg1, target_cc, msg3);
-//     target_dyn = msg3;
-//     passthru = 0;
-//    )
-//    : notes_on == 0 ? (
-//      decay_samples = 0;
-//      reset_xf(offset);
-//      dyn_state=dyn_st_init;
-//    );
-//  );
-//  passthru;
-//);
-
-function is_short_art(art) (
-  section = art & $xF0;
-  section == 0 || section == $x50 || art == ks_con_sord_stac || 
-    art == ks_harmonics_stac || art == ks_sul_pont_stac || art == ks_harmonics_stac;
-);
-
 @slider
 samples_per_cycle = resolution * (srate / 1000);
 decay_per_cycle = rebreath_time * (srate / 1000);
@@ -406,26 +399,3 @@ while (midirecv_str(offset,#midi_str)) (
   );
   passthru ? midisend_str(offset,#midi_str); 
 );
-    
-
-//@sample
-//dyn_state == dyn_st_attack && !samples_left ? (
-//  dyn_state = dyn_st_post_attack;
-//) 
-//: dyn_state == dyn_st_attack && sample_block_counter ? (
-//  sample_block_counter -= 1;
-//  samples_left -= 1;
-//) 
-//: dyn_state == dyn_st_attack ? (
-//  f = 1-(samples_left/samples_needed);
-//  new_dynamic = (target_dyn - start_dyn) * f + start_dyn;
-//  midisend(0, $xb0, target_cc, new_dynamic);
-//  sample_block_counter = floor( samples_per_cycle * (attack_time / (tempo / 60.0)));
-//  samples_left -= 1;
-//)
-//: dyn_state == dyn_st_decay ? (
-//  decay_samples -=1;
-//  dyn_state = decay_samples ? dyn_st_decay : dyn_st_init;
-//);
-//
-//
