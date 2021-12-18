@@ -1,4 +1,4 @@
-desc:VSL SE Performance Controller V2
+desc:VSL SE Performance Controller V1
 
 //slider1:attack_time=0<0,16>Attack Time (beats, 0=disable dynamics)
 //slider2:max_attack_time=4<0,16>Max Attack Time (beats)
