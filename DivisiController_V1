@@ -214,10 +214,14 @@ function over(offset, msg1, msg2, msg3) (
   ) : is_note_on(msg1, msg2, msg3) ? st_over;
 );
 
+function is_passthru_message(msg1) (
+  msg1 == $xB0 || msg1 == $xC0 || msg1 == $x80 || msg1 == $x90;
+);
+  
 function handle_control_messages(offset, msg1, msg2, msg3) local(chans,i) (
   i = 0;
   msg1masked = msg1 & $xF0;
-  msg1masked == $xB0 || msg1masked == $x80 || msg1masked == $x90 ?
+  is_passthru_message(msg1masked) ? 
     while (i < num_params) (
       chord_note[i] ? (
         midi_bus = chord_note_channel[i] >> 4;
