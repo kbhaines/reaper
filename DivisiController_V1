@@ -77,21 +77,32 @@ st_min_notes = 1;
 st_max_notes = 2;
 st_over = 4;
 
+
+// NOTE!!!: You need to remember that array accesses are in a shared global
+// pool, so this is why chord_note=200 is necessary below (it's a safe
+// offset above the notelist which needs 128 elements.
+
 // notelist[0-127] contains the list of notes playing or collected, using 11 as
 // a 'new note' indicator. Otherwise, it stores the note number of the chord
-// being played, from 1 to num_notes.
+// being played, from 1 to num_notes.  
 
 notelist = 0;
 
-// number of notes on
-num_notes = 0;
+// note_velocity stores the velocity of the note from the player, needs 128
+// elements
 
+note_velocity = 128;
+
+// number of notes currently played (on)
+num_notes = 0;
 
 // There are 16 sets of sliders/parameter blocks
 num_params = 16;
 
-// UI settings are stored in these arrays
-chord_note = 200;
+// UI settings are stored in these arrays, starting after
+// notelist and note_velocity arrays
+
+chord_note = 256;
 chord_note_channel = chord_note + num_params;
 chord_note_translation = chord_note_channel + num_params;
 
@@ -113,8 +124,9 @@ function handle_chord_note(cmd, offset, chord_note_id, note, vel) local (i) (
   );
 );
 
-function note_on(new_note) (
+function note_on(new_note, vel) (
   notelist[new_note] = 11;
+  note_velocity[new_note] = vel;
   num_notes +=1;
 );
 
@@ -133,16 +145,16 @@ function play_chord(offset, vel) local (chord_note, i ) (
   while (
      // handle a note, which if it's new (11) means 
      // turning it on as well, and assigning it
-     // the current chord_note value1
+     // the current chord_note value
      notelist[i] != 0 ? (
        notelist[i] == 11 ? ( 
-         handle_chord_note($x90, offset, chord_note, i, vel);
+         handle_chord_note($x90, offset, chord_note, i, note_velocity[i]);
        ) : notelist[i] != chord_note ? (
          // note is already sounding in another position (channel),
          // we need to move it by turning it off and back
          // on in the new position/channel.
-         handle_chord_note($x80, offset, notelist[i], i, vel);
-         handle_chord_note($x90, offset, chord_note, i, vel);
+         handle_chord_note($x80, offset, notelist[i], i, 0);
+         handle_chord_note($x90, offset, chord_note, i, note_velocity[i]);
        );
        notelist[i] = chord_note;
        chord_note += 1;
@@ -154,7 +166,7 @@ function play_chord(offset, vel) local (chord_note, i ) (
 
 function is_note_on(msg1, msg2, msg3) (
   (msg1 == $x90 && msg3 > 0) ? (
-    note_on(msg2);
+    note_on(msg2, msg3);
     1;
   ) : 0;
 );
