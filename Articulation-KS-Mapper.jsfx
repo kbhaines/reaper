@@ -9,20 +9,21 @@ slider1:/articulation-maps:vsl-special.txt:Articulation Map
 @init
 ext_midi_bus = 1.0;
 
-// Store in global array
 max_articulations = 50;
+arts_loaded = 0;
+
+// Store in global string array
 art_match_strings = 0;
-articulations_loaded = 0;
 art_keys_str = art_match_strings + max_articulations;
+
+// KS midi are 4 byte numbers representing the max 4 key switch notes
+// in order from High to Low byte
 articulation_ks_midi = 0;
 
-//art_filename=50;
-//art_str = 51;
 function blip_note(offset, note) (
   midisend(offset, $x90, note, 127);
   midisend(offset, $x80, note, 0);
 );
-
 
 function parse_note_seq(note_seq) local(acc, i, rest) (
   acc = 0;
@@ -76,16 +77,6 @@ function load_arts() local (handle, i, art_str, keys, art_name) (
   );
 );
 
-// this is the articulation last set by a notation
-active_notn_art = -1;
-
-art_notn = -1;
-note_on_ctr = 1;
-
-
-// returns an articulation index based on the string passed, or
-// -1 if the string wasn't matched. It's not an optimum solution
-// but works fine.
 function parse_notation(msg)local(art_match, scan, note_art) (
   art_match = -1;
   match("NOTE %d %d %s", msg, n1, n2, #note_art) ? (
@@ -94,14 +85,18 @@ function parse_notation(msg)local(art_match, scan, note_art) (
       //#tmps = art_match_strings + scan;
       //#tmpy = art_keys_str + scan;
       
-      //m0 = strcmp(art_match_strings + scan, #note_art);
-      m1 = match(art_match_strings + scan, #note_art);
-      m1 ? art_match = articulation_ks_midi[scan];
+      match(art_match_strings + scan, #note_art) ? 
+        art_match = articulation_ks_midi[scan];
       scan += 1;
     );
   );
   art_match;
 );
+
+// this is the articulation last set by a notation
+active_notn_art = -1;
+art_notn = -1;
+note_on_ctr = 1;
 
 @slider
 load_arts();
@@ -109,7 +104,9 @@ load_arts();
 // TEST DATA
 test_pn = parse_notation("NOTE 0 61 phrase 1 slur begin");
 sprintf(#test_pnh, "%X", test_pn);
+#test_pnh_expected = "191B0000";
 sprintf(#test_pns, "%X", parse_note_seq("C-1C2C3F#0"));
+#test_pns_expected = "1253113";
 
 @block
 while (midirecv_str(offset, #str)) (
