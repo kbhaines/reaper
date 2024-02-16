@@ -1,0 +1,133 @@
+desc:Articulation KS Mapper
+in_pin:none
+out_pin:none
+
+slider1:/articulation-maps:vsl-special.txt:Articulation Map
+
+@slider
+
+@init
+ext_midi_bus = 1.0;
+
+// Store in global array
+max_articulations = 50;
+art_match_strings = 0;
+articulations_loaded = 0;
+art_keys_str = art_match_strings + max_articulations;
+articulation_ks_midi = 0;
+
+//art_filename=50;
+//art_str = 51;
+function blip_note(offset, note) (
+  midisend(offset, $x90, note, 127);
+  midisend(offset, $x80, note, 0);
+);
+
+
+function parse_note_seq(note_seq) local(acc, i, rest) (
+  acc = 0;
+  i = 0;
+  strcpy(seq, note_seq);
+  while (strlen(seq) > 1 && i < 4) (
+    acc = acc << 8;
+    match("C%d%0s", seq, oct, #rest)  ? ( note = 0 ):
+    match("C#%d%0s", seq, oct, #rest) ? ( note = 1 ):
+  
+    match("D%d%0s", seq, oct, #rest)  ? ( note = 2 ):
+    match("D#%d%0s", seq, oct, #rest) ? ( note = 3 ):
+  
+    match("E%d%0s", seq, oct, #rest)  ? ( note = 4 ):
+    match("F%d%0s", seq, oct, #rest)  ? ( note = 5 ):
+    match("F#%d%0s", seq, oct, #rest) ? ( note = 6 ):
+  
+    match("G%d%0s", seq, oct, #rest)  ? ( note = 7 ):
+    match("G#%d%0s", seq, oct, #rest) ? ( note = 8 ):
+    match("A%d%0s", seq, oct, #rest)  ? ( note = 9 ):
+    match("A#%d%0s", seq, oct, #rest) ? ( note = 10 ):
+    match("B%d%0s", seq, oct, #rest)  ? ( note = 11 ): (note = 99);
+
+    strcpy(seq, #rest);
+    acc += 1 + note + (oct + 1) * 12;
+    i+=1;
+  );
+  while (i<4) (acc = acc << 8; i+=1);
+  acc;
+);
+
+function load_arts() local (handle, i, art_str, keys, art_name) (
+
+  // TODO: File change/reload logic
+  
+  strcpy_fromslider(#art_filename, slider1);
+  !((handle = file_open(#art_filename)) < 0) ? ( // file_open successful
+    i = 0;
+    while (file_string(handle,#art_str) > 0) (
+      #dbg_desc=#art_str;
+      match("%S %s\n*",#art_str,#keys,#art_name) ||
+      match("%S %s\r*",#art_str,#keys,#art_name) ? (
+        strcpy(art_match_strings+i, #art_name);
+        strcpy(art_keys_str+i, #keys);
+        articulation_ks_midi[i] = parse_note_seq(#keys);
+        i += 1;
+      );
+    );
+    file_close(handle);
+    arts_loaded = i;
+  );
+);
+
+// this is the articulation last set by a notation
+active_notn_art = -1;
+
+art_notn = -1;
+note_on_ctr = 1;
+
+
+// returns an articulation index based on the string passed, or
+// -1 if the string wasn't matched. It's not an optimum solution
+// but works fine.
+function parse_notation(msg)local(art_match, scan, note_art) (
+  art_match = -1;
+  match("NOTE %d %d %s", msg, n1, n2, #note_art) ? (
+    scan = 0;
+    while (scan < arts_loaded && (art_match < 0)) (
+      //#tmps = art_match_strings + scan;
+      //#tmpy = art_keys_str + scan;
+      
+      //m0 = strcmp(art_match_strings + scan, #note_art);
+      m1 = match(art_match_strings + scan, #note_art);
+      m1 ? art_match = articulation_ks_midi[scan];
+      scan += 1;
+    );
+  );
+  art_match;
+);
+
+@slider
+load_arts();
+
+// TEST DATA
+test_pn = parse_notation("NOTE 0 61 phrase 1 slur begin");
+sprintf(#test_pnh, "%X", test_pn);
+sprintf(#test_pns, "%X", parse_note_seq("C-1C2C3F#0"));
+
+@block
+while (midirecv_str(offset, #str)) (
+  #dbg_desc = "looper";
+  msg1 = str_getchar(#str, 0);
+  msg2 = str_getchar(#str, 1);
+  msg3 = str_getchar(#str, 2);
+  
+  // Look for a string event which is a notation
+  msg1 == $xFF && msg2 == $x0F ? (
+    strcpy_from(#msg, #str, 2);
+    art_notn = parse_notation(#msg);
+    (art_notn >=0 ) ? (
+      active_notn_art != art_notn ? (
+        active_notn_art = art_notn;
+      );
+      // two note-on messages will reset notation-articulation
+      note_on_ctr = 2;
+    )
+  ) : midisend_str(offset, #str); // passthrough other events
+); 
