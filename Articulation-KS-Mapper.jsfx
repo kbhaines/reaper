@@ -26,7 +26,8 @@ function blip_note(offset, note) (
   midisend(offset, $x80, note, 0);
 );
 
-function parse_note_seq(note_seq) local(acc, i, rest) (
+function parse_note_seq(note_seq) 
+  local(seq, note, oct, acc, i, rest) (
   acc = 0;
   i = 0;
   strcpy(seq, note_seq);
@@ -51,7 +52,6 @@ function parse_note_seq(note_seq) local(acc, i, rest) (
     acc += (1 + note + (oct + 1) * 12) << (i * 8);
     i+=1;
   );
-  //while (i<4) (acc = acc << 80; i+=1);
   acc;
 );
 
@@ -63,7 +63,6 @@ function load_arts() local (handle, i, art_str, keys, art_name) (
   !((handle = file_open(#art_filename)) < 0) ? ( // file_open successful
     i = 0;
     while (file_string(handle,#art_str) > 0) (
-      #dbg_desc=#art_str;
       match("%S %s\n*",#art_str,#keys,#art_name) ||
       match("%S %s\r*",#art_str,#keys,#art_name) ? (
         strcpy(art_match_strings+i, #art_name);
@@ -133,22 +132,21 @@ function set_articulation(offset, str) local (msg1) (
 load_arts();
 
 // TEST DATA
-test_pn = parse_notation("NOTE 0 61 phrase 1 slur begin");
-sprintf(#test_pnh, "%X", test_pn);
-#test_pnh_expected = "191B0000";
-sprintf(#test_pns, "%X", parse_note_seq("C-1C2C3F#0"));
-#test_pns_expected = "1253113";
+//test_pn = parse_notation("NOTE 0 61 phrase 1 slur begin");
+//sprintf(#test_pnh, "%X", test_pn);
+//#test_pnh_expected = "191B0000";
+//sprintf(#test_pns, "%X", parse_note_seq("C-1C2C3F#0"));
+//#test_pns_expected = "1253113";
 
 @block
 while (midirecv_str(offset, #str)) (
-  #dbg_desc = "looper";
   msg1 = str_getchar(#str, 0);
   msg2 = str_getchar(#str, 1);
   msg3 = str_getchar(#str, 2);
   
   (STATE == STATE_REST) ? (
     is_text_evt(msg1, msg2) ? (
-      set_articulation(offets, #str);
+      set_articulation(offset, #str);
       STATE=STATE_ART_SENT;
     ): is_note_on(msg1) && use_default ? (
       send_ks_for_articulation(offset, 0);
@@ -161,8 +159,8 @@ while (midirecv_str(offset, #str)) (
       STATE=STATE_ART_SENT;
     ): is_note_on(msg1) && use_default ? (
       send_ks_for_articulation(offset, 0);
-      STATE = STATE_REST;
     );
+    STATE = STATE_REST;
   );
   midisend_str(offset, #str);
 ); 
