@@ -1,7 +1,7 @@
 C#1C2 *_sustain
 C1C2 articulation staccato
 C1C#2 *_detache
-C1CD2 *_detache
+C1D2 *_detache
 C1D#2 *_legrep
 C1E2 *_spicrep
 C#1C#2 articulation marcato

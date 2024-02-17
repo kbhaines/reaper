@@ -1,0 +1,36 @@
+C1C2 articulation portato
+C2F2 articulation staccato
+C1C2 articulation marcato
+C1C2 ornament trill
+C1C2 ornament tremolo
+C1C2 ornament whole_note_trill
+C1C2 articulation marcato ornament tremolo
+;custom rep150
+;custom rep170
+;custom rep190
+;custom detache
+;custom sul-pont
+;phrase %d slur*
+;custom snap-pizz
+;custom col-legno
+;custom harmonics
+;custom fortepiano
+;custom con-sordino
+;custom rep phrase*
+;custom sus phrase*
+;custom detache-short
+;custom str-rep phrase*
+;custom xf ornament tremolo
+;;custom sfz ornament tremolo
+;phrase %d slur*technique bend
+;custom sul-pont ornament tremolo
+;custom rep articulation staccato
+;custom fortepiano ornament tremolo
+;custom con-sordino ornament tremolo
+;custom str-rep articulation staccato
+;custom sul-pont articulation marcato
+;;custom harmonics articulation marcato
+;custom sul-pont articulation staccato
+;custom harmonics articulation staccato
+;custom con-sordino articulation marcato
+;custom con-sordino articulation staccato

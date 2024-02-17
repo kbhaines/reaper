@@ -1,7 +1,7 @@
 C#6C7 *_sustain
 C6C7 articulation staccato
 C6C#7 *_detache
-C6CD7 *_detache
+C6D7 *_detache
 C6D#7 *_legrep
 C6E7 *_spicrep
 C#6C#7 articulation marcato
