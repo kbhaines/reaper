@@ -1,0 +1,47 @@
+C#6C7 *_sustain
+C6C7 articulation staccato
+C6C#7 articulation portato
+C6D7 *_port_long
+C6D#7 *_stacrep
+C#6C#7 *_blare
+C#6D7 articulation marcato
+C#6D#7 *_sus_med_p
+C#6E7 *_sus_med_f
+D6C7 *slur begin
+D6C#7 *_leg_fast
+D6D7 *slur begin technique slide
+D#6C7 *_fp
+D#6C#7 *_sfz
+D#6D7 *_sforzat
+
+E6C7A0 *_1.5s_cresc_strong
+E6C7B0 *_1.5s_dimin_strong
+E6C#7A0 *_2s_cresc_strong
+E6C#7B0 *_2s_dimin_strong
+E6D7A0 *_3s_cresc_strong
+E6D7B0 *_3s_dimin_strong
+E6D#7A0 *_4s_cresc_strong
+E6D#7B0 *_4s_dimin_strong
+
+F6C7A0 *_1s_cresc_light
+F6C7B0 *_1s_dimin_light
+F6C#7A0 *_2s_cresc_light
+F6C#7B0 *_2s_dimin_light
+F6D7A0 *_3s_cresc_light
+F6D7B0 *_3s_dimin_light
+
+F#6 *_flutter
+
+G6C7 *_perf_rep_stac
+G6C#7 *_perf_rep_port
+G6D7 *_perf_rep_leg
+G6D#7 *_stac_cres_9reps
+G6E7 *_port_cres_9reps
+G6F7 *_leg_cres_9reps
+
+G#6C7 *_rep140
+G#6C#7 *_rep150
+G#6D7 *_rep160
+G#6D#7 *_rep170
+G#6E7 *_rep180
+G#6F7 *_rep200
