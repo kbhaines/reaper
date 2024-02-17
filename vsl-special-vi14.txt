@@ -1,0 +1,24 @@
+C#1C2 *_sustain
+C1C2 articulation staccato
+C1C#2 *_detache
+C1CD2 *_detache
+C1D#2 *_legrep
+C1E2 *_spicrep
+C#1C#2 articulation marcato
+C#1D2 *_xftrem
+D1C2 *slur begin
+D1C#2 *slur begin technique slide
+D#1C2 *_sfz
+D#1C#2 *_sfz_xf_trem
+D#1D2 *_fp
+D#1D#2 *_fp_xf_trem
+E1C2 ornament tremolo
+E1C#2 articulation marcato ornament tremolo
+E1D2 ornament trill
+E1D#2 *_wt_trill
+E1E2 *_rep150
+E1F2 *_rep170
+E1F#2 *_rep190
+F1C2 ornament pluck
+F1C#2 ornament snap
+F1D2 *_col_legno

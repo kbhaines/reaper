@@ -3,6 +3,7 @@ in_pin:none
 out_pin:none
 
 slider1:/articulation-maps:vsl-special.txt:Articulation Map
+slider2:use_default=0<0,1,1{Off,On}>Use first Articulation as default
 
 @slider
 
@@ -109,18 +110,22 @@ function is_note_on(msg1) (
   (msg1 & $xF0) == $x90;
 );
 
+function send_ks_for_articulation(offset, art_no) (
+  ks_midi = articulation_ks_midi[art_no];
+  sprintf(#ks_xx, "%X", ks_midi);
+  while (ks_midi) (
+  // TODO  -1?
+    blip_note(offset, (ks_midi & $xFF)-1);
+    ks_midi = ks_midi >> 8;
+  );
+);
+
 function set_articulation(offset, str) local (msg1) (
   strcpy_from(#msg, #str, 2);
   new_art = parse_notation(#msg);
   (new_art >=0 && new_art != ACTIVE_ART) ? (
     ACTIVE_ART = new_art;
-    ks_midi = articulation_ks_midi[ACTIVE_ART];
-    sprintf(#ks_xx, "%X", ks_midi);
-    while (ks_midi) (
-    // TODO  -1?
-      blip_note(offset, (ks_midi & $xFF)-1);
-      ks_midi = ks_midi >> 8;
-    );
+    send_ks_for_articulation(offset, new_art);
   );
 );
 
@@ -145,6 +150,8 @@ while (midirecv_str(offset, #str)) (
     is_text_evt(msg1, msg2) ? (
       set_articulation(offets, #str);
       STATE=STATE_ART_SENT;
+    ): is_note_on(msg1) && use_default ? (
+      send_ks_for_articulation(offset, 0);
     );
   ): (STATE == STATE_ART_SENT) ? (
     is_note_on(msg1) && STATE=STATE_NOTE_SENT;
@@ -152,7 +159,10 @@ while (midirecv_str(offset, #str)) (
     is_text_evt(msg1, msg2) ? (
       set_articulation(offset, #str);
       STATE=STATE_ART_SENT;
-    ): STATE = STATE_REST;
+    ): is_note_on(msg1) && use_default ? (
+      send_ks_for_articulation(offset, 0);
+      STATE = STATE_REST;
+    );
   );
   midisend_str(offset, #str);
 ); 
