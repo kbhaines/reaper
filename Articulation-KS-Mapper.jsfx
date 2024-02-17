@@ -13,12 +13,12 @@ max_articulations = 50;
 arts_loaded = 0;
 
 // Store in global string array
-art_match_strings = 0;
+art_match_strings = 1;
 art_keys_str = art_match_strings + max_articulations;
 
 // KS midi are 4 byte numbers representing the max 4 key switch notes
 // in order from High to Low byte
-articulation_ks_midi = 0;
+articulation_ks_midi = 1;
 
 function blip_note(offset, note) (
   midisend(offset, $x90, note, 127);
@@ -30,7 +30,6 @@ function parse_note_seq(note_seq) local(acc, i, rest) (
   i = 0;
   strcpy(seq, note_seq);
   while (strlen(seq) > 1 && i < 4) (
-    acc = acc << 8;
     match("C%d%0s", seq, oct, #rest)  ? ( note = 0 ):
     match("C#%d%0s", seq, oct, #rest) ? ( note = 1 ):
   
@@ -48,10 +47,10 @@ function parse_note_seq(note_seq) local(acc, i, rest) (
     match("B%d%0s", seq, oct, #rest)  ? ( note = 11 ): (note = 99);
 
     strcpy(seq, #rest);
-    acc += 1 + note + (oct + 1) * 12;
+    acc += (1 + note + (oct + 1) * 12) << (i * 8);
     i+=1;
   );
-  while (i<4) (acc = acc << 8; i+=1);
+  //while (i<4) (acc = acc << 80; i+=1);
   acc;
 );
 
@@ -77,26 +76,53 @@ function load_arts() local (handle, i, art_str, keys, art_name) (
   );
 );
 
-function parse_notation(msg)local(art_match, scan, note_art) (
+function parse_notation(txt)local(art_match, scan, note_art) (
   art_match = -1;
-  match("NOTE %d %d %s", msg, n1, n2, #note_art) ? (
+  match("NOTE %d %d %s", txt, n1, n2, #note_art) ? (
     scan = 0;
     while (scan < arts_loaded && (art_match < 0)) (
       //#tmps = art_match_strings + scan;
       //#tmpy = art_keys_str + scan;
       
       match(art_match_strings + scan, #note_art) ? 
-        art_match = articulation_ks_midi[scan];
+        art_match = scan; //articulation_ks_midi[scan];
       scan += 1;
     );
   );
   art_match;
 );
 
-// this is the articulation last set by a notation
-active_notn_art = -1;
-art_notn = -1;
-note_on_ctr = 1;
+
+ACTIVE_ART = -1;
+STATE_REST = 0;
+STATE_ART_SENT = 1;
+STATE_NOTE_SENT = 2;
+
+STATE = STATE_REST;
+
+function is_text_evt(msg1, msg2) (
+  msg1 == $xFF && msg2 == $x0F;
+);
+
+
+function is_note_on(msg1) (
+  (msg1 & $xF0) == $x90;
+);
+
+function set_articulation(offset, str) local (msg1) (
+  strcpy_from(#msg, #str, 2);
+  new_art = parse_notation(#msg);
+  (new_art >=0 && new_art != ACTIVE_ART) ? (
+    ACTIVE_ART = new_art;
+    ks_midi = articulation_ks_midi[ACTIVE_ART];
+    sprintf(#ks_xx, "%X", ks_midi);
+    while (ks_midi) (
+    // TODO  -1?
+      blip_note(offset, (ks_midi & $xFF)-1);
+      ks_midi = ks_midi >> 8;
+    );
+  );
+);
 
 @slider
 load_arts();
@@ -115,16 +141,18 @@ while (midirecv_str(offset, #str)) (
   msg2 = str_getchar(#str, 1);
   msg3 = str_getchar(#str, 2);
   
-  // Look for a string event which is a notation
-  msg1 == $xFF && msg2 == $x0F ? (
-    strcpy_from(#msg, #str, 2);
-    art_notn = parse_notation(#msg);
-    (art_notn >=0 ) ? (
-      active_notn_art != art_notn ? (
-        active_notn_art = art_notn;
-      );
-      // two note-on messages will reset notation-articulation
-      note_on_ctr = 2;
-    )
-  ) : midisend_str(offset, #str); // passthrough other events
+  (STATE == STATE_REST) ? (
+    is_text_evt(msg1, msg2) ? (
+      set_articulation(offets, #str);
+      STATE=STATE_ART_SENT;
+    );
+  ): (STATE == STATE_ART_SENT) ? (
+    is_note_on(msg1) && STATE=STATE_NOTE_SENT;
+  ): (STATE == STATE_NOTE_SENT) ? (
+    is_text_evt(msg1, msg2) ? (
+      set_articulation(offset, #str);
+      STATE=STATE_ART_SENT;
+    ): STATE = STATE_REST;
+  );
+  midisend_str(offset, #str);
 ); 
