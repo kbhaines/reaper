@@ -58,7 +58,6 @@ function parse_note_seq(note_seq)
 function load_arts() local (handle, i, art_str, keys, art_name) (
 
   // TODO: File change/reload logic
-  
   strcpy_fromslider(#art_filename, slider1);
   !((handle = file_open(#art_filename)) < 0) ? ( // file_open successful
     i = 0;
@@ -117,6 +116,7 @@ function send_ks_for_articulation(offset, art_no) (
     blip_note(offset, (ks_midi & $xFF)-1);
     ks_midi = ks_midi >> 8;
   );
+  ACTIVE_ART = art_no;
 );
 
 function set_articulation(offset, str) local (msg1) (
@@ -125,7 +125,8 @@ function set_articulation(offset, str) local (msg1) (
   (new_art >=0 && new_art != ACTIVE_ART) ? (
     ACTIVE_ART = new_art;
     send_ks_for_articulation(offset, new_art);
-  );
+    1;
+  ) : 0;
 );
 
 @slider
@@ -146,8 +147,7 @@ while (midirecv_str(offset, #str)) (
   
   (STATE == STATE_REST) ? (
     is_text_evt(msg1, msg2) ? (
-      set_articulation(offset, #str);
-      STATE=STATE_ART_SENT;
+      set_articulation(offset, #str) && STATE=STATE_ART_SENT;
     ): is_note_on(msg1) && use_default ? (
       send_ks_for_articulation(offset, 0);
     );
@@ -163,4 +163,33 @@ while (midirecv_str(offset, #str)) (
     STATE = STATE_REST;
   );
   midisend_str(offset, #str);
-); 
+);
+
+@gfx 360 360
+margin_left = 20;
+margin_top = 10;
+
+arts_loaded > 0 ? ( 
+  gfx_setfont(1, "arial", 12, 'b');
+  gfx_a = 1;
+  gfx_r = gfx_g = gfx_b = 1;
+  gfx_x = margin_left;
+  gfx_y = margin_top;
+  gfx_printf("%d articulations loaded\n", arts_loaded);
+  i = 0;
+  loop(arts_loaded,
+    gfx_x = margin_left;
+    gfx_y = margin_top + (i + 1) * (gfx_texth + 5);
+    gfx_drawstr(art_keys_str + i);
+    gfx_x = 100;
+    gfx_drawstr(art_match_strings + i);
+    i == ACTIVE_ART ? (
+      gfx_g = gfx_b = 0;
+      gfx_a = 0.5;
+      gfx_rect(0, gfx_y, gfx_x, gfx_texth);
+      gfx_g = gfx_b = 1;
+      gfx_a = 1;
+    );
+    i += 1;
+  );
+);
