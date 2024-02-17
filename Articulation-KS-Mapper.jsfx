@@ -2,8 +2,8 @@ desc:Articulation KS Mapper
 in_pin:none
 out_pin:none
 
-slider1:/articulation-maps:vsl-special.txt:Articulation Map
-slider2:use_default=0<0,1,1{Off,On}>Use first Articulation as default
+slider1:/articulation-maps:vsl-special-vi14.txt:Articulation Map
+slider2:use_default=0<0,1,1{Off,On}>Use first articulation as the default
 
 @slider
 
