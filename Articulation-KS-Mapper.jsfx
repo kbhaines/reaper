@@ -10,16 +10,19 @@ slider2:use_default=0<0,1,1{Off,On}>Use first articulation as the default
 @init
 ext_midi_bus = 1.0;
 
-max_articulations = 50;
+MAX_ARTICULATIONS = 50;
 arts_loaded = 0;
 
 // Store in global string array
 art_match_strings = 1;
-art_keys_str = art_match_strings + max_articulations;
+art_keys_str = art_match_strings + MAX_ARTICULATIONS;
 
 // KS midi are 4 byte numbers representing the max 4 key switch notes
 // in order from High to Low byte
 articulation_ks_midi = 1;
+
+// 
+queued_arts = articulation_ks_midi + MAX_ARTICULATIONS;
 
 function blip_note(offset, note) (
   midisend(offset, $x90, note, 127);
@@ -61,7 +64,7 @@ function load_arts() local (handle, i, art_str, keys, art_name) (
   strcpy_fromslider(#art_filename, slider1);
   !((handle = file_open(#art_filename)) < 0) ? ( // file_open successful
     i = 0;
-    while (file_string(handle,#art_str) > 0) (
+    while (file_string(handle,#art_str) > 0 && i < MAX_ARTICULATIONS) (
       match("%S %s\n*",#art_str,#keys,#art_name) ||
       match("%S %s\r*",#art_str,#keys,#art_name) ? (
         strcpy(art_match_strings+i, #art_name);
@@ -96,7 +99,6 @@ ACTIVE_ART = -1;
 STATE_REST = 0;
 STATE_ART_SENT = 1;
 STATE_NOTE_SENT = 2;
-
 STATE = STATE_REST;
 
 function is_text_evt(msg1, msg2) (
@@ -108,25 +110,22 @@ function is_note_on(msg1) (
   (msg1 & $xF0) == $x90;
 );
 
-function send_ks_for_articulation(offset, art_no) (
-  ks_midi = articulation_ks_midi[art_no];
+function send_ks_for_articulation(offset, art_id) (
+  ks_midi = articulation_ks_midi[art_id];
   sprintf(#ks_xx, "%X", ks_midi);
   while (ks_midi) (
   // TODO  -1?
     blip_note(offset, (ks_midi & $xFF)-1);
     ks_midi = ks_midi >> 8;
   );
-  ACTIVE_ART = art_no;
+  ACTIVE_ART = art_id;
 );
 
 function set_articulation(offset, str) local (msg1) (
   strcpy_from(#msg, #str, 2);
   new_art = parse_notation(#msg);
-  (new_art >=0 && new_art != ACTIVE_ART) ? (
-    ACTIVE_ART = new_art;
-    send_ks_for_articulation(offset, new_art);
-    1;
-  ) : 0;
+  new_art >=0 && new_art != ACTIVE_ART ? send_ks_for_articulation(offset, new_art);
+  new_art;
 );
 
 @slider
@@ -147,20 +146,13 @@ while (midirecv_str(offset, #str)) (
   
   (STATE == STATE_REST) ? (
     is_text_evt(msg1, msg2) ? (
-      set_articulation(offset, #str) && STATE=STATE_ART_SENT;
-    ): is_note_on(msg1) && use_default ? (
-      send_ks_for_articulation(offset, 0);
-    );
-  ): (STATE == STATE_ART_SENT) ? (
-    is_note_on(msg1) && STATE=STATE_NOTE_SENT;
-  ): (STATE == STATE_NOTE_SENT) ? (
-    is_text_evt(msg1, msg2) ? (
       set_articulation(offset, #str);
       STATE=STATE_ART_SENT;
     ): is_note_on(msg1) && use_default ? (
       send_ks_for_articulation(offset, 0);
     );
-    STATE = STATE_REST;
+  ): (STATE == STATE_ART_SENT) ? (
+    is_note_on(msg1) && STATE=STATE_REST;
   );
   midisend_str(offset, #str);
 );
@@ -168,11 +160,12 @@ while (midirecv_str(offset, #str)) (
 @gfx 360 360
 margin_left = 20;
 margin_top = 10;
+text_colour = 0.9;
 
 arts_loaded > 0 ? ( 
   gfx_setfont(1, "arial", 12, 'b');
   gfx_a = 1;
-  gfx_r = gfx_g = gfx_b = 1;
+  gfx_r = gfx_g = gfx_b = text_colour;
   gfx_x = margin_left;
   gfx_y = margin_top;
   gfx_printf("%d articulations loaded\n", arts_loaded);
@@ -184,10 +177,11 @@ arts_loaded > 0 ? (
     gfx_x = 100;
     gfx_drawstr(art_match_strings + i);
     i == ACTIVE_ART ? (
-      gfx_g = gfx_b = 0;
-      gfx_a = 0.5;
+      gfx_r = gfx_b = 0;
+      gfx_g = 1;
+      gfx_a = 0.4;
       gfx_rect(0, gfx_y, gfx_x, gfx_texth);
-      gfx_g = gfx_b = 1;
+      gfx_r = gfx_b = gfx_g = text_colour;
       gfx_a = 1;
     );
     i += 1;
