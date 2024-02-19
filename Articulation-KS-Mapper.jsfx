@@ -21,12 +21,15 @@ art_keys_str = art_match_strings + MAX_ARTICULATIONS;
 // in order from High to Low byte
 articulation_ks_midi = 1;
 
-// 
-queued_arts = articulation_ks_midi + MAX_ARTICULATIONS;
+// note_art is an array holding a midi note number's assigned articulation
+// indexed by chan * 128 + note_id
+note_art = articulation_ks_midi + MAX_ARTICULATIONS;
+note_art_size = 128 * 16;
+memset(note_art, -1, note_art_size);
 
-function blip_note(offset, note) (
-  midisend(offset, $x90, note, 127);
-  midisend(offset, $x80, note, 0);
+function blip_note(offset, chan, note) (
+  midisend(offset, $x90+chan, note, 127);
+  midisend(offset, $x80+chan, note, 0);
 );
 
 function parse_note_seq(note_seq) 
@@ -78,18 +81,17 @@ function load_arts() local (handle, i, art_str, keys, art_name) (
   );
 );
 
-function parse_notation(txt)local(art_match, scan, note_art) (
+function parse_notation(note_art_str) (
   art_match = -1;
-  match("NOTE %d %d %s", txt, n1, n2, #note_art) ? (
-    scan = 0;
-    while (scan < arts_loaded && (art_match < 0)) (
-      //#tmps = art_match_strings + scan;
-      //#tmpy = art_keys_str + scan;
-      
-      match(art_match_strings + scan, #note_art) ? 
-        art_match = scan; //articulation_ks_midi[scan];
-      scan += 1;
-    );
+  scan = 0;
+  sprintf(#pnn, ">> %s", note_art_str);
+  while (scan < arts_loaded && (art_match < 0)) (
+    //#tmps = art_match_strings + scan;
+    //#tmpy = art_keys_str + scan;
+    
+    match(art_match_strings + scan, note_art_str) ? 
+      art_match = scan;
+    scan += 1;
   );
   art_match;
 );
@@ -110,31 +112,45 @@ function is_note_on(msg1) (
   (msg1 & $xF0) == $x90;
 );
 
-function send_ks_for_articulation(offset, art_id) (
-  ks_midi = articulation_ks_midi[art_id];
-  sprintf(#ks_xx, "%X", ks_midi);
-  while (ks_midi) (
-  // TODO  -1?
-    blip_note(offset, (ks_midi & $xFF)-1);
-    ks_midi = ks_midi >> 8;
+function send_ks_for_articulation(offset, chan, art_id) (
+  art_id != ACTIVE_ART ? (
+    ks_midi = articulation_ks_midi[art_id];
+    //sprintf(#ks_xx, "%X", ks_midi);
+    while (ks_midi) (
+    // TODO  -1?
+      blip_note(offset, chan, (ks_midi & $xFF)-1);
+      ks_midi = ks_midi >> 8;
+    );
+    ACTIVE_ART = art_id;
   );
-  ACTIVE_ART = art_id;
 );
 
-function set_articulation(offset, str) local (msg1) (
-  strcpy_from(#msg, #str, 2);
-  new_art = parse_notation(#msg);
-  new_art >=0 && new_art != ACTIVE_ART ? send_ks_for_articulation(offset, new_art);
-  new_art;
+function set_articulation(str) (
+  strcpy_from(#msga, #str, 2);
+  match("NOTE %d %d %s", #msga, note_chan, note_id, #art_str) ? (
+    //sprintf(#matched,"%s %d %d %d", #art_str, note_chan, note_id,
+      //parse_notation(#art_str));
+    note_art[note_chan * 128 + note_id] = parse_notation(#art_str);
+  );
 );
+
+function check_articulation(offset, chan, note_id) (
+  i = chan * 128 + note_id;
+  art_id = note_art[i];
+  art_id >= 0 ? (
+    send_ks_for_articulation(offset, chan, art_id);
+    note_art[i] = -1;
+  );
+);
+  
 
 @slider
 load_arts();
 
 // TEST DATA
-//test_pn = parse_notation("NOTE 0 61 phrase 1 slur begin");
-//sprintf(#test_pnh, "%X", test_pn);
-//#test_pnh_expected = "191B0000";
+//test_pn = parse_notation("phrase 1 slur begin");
+//sprintf(#test_pn, "%X", test_pn);
+//#test_pn_expected = "191B0000";
 //sprintf(#test_pns, "%X", parse_note_seq("C-1C2C3F#0"));
 //#test_pns_expected = "1253113";
 
@@ -144,43 +160,44 @@ while (midirecv_str(offset, #str)) (
   msg2 = str_getchar(#str, 1);
   msg3 = str_getchar(#str, 2);
   
-  (STATE == STATE_REST) ? (
-    is_text_evt(msg1, msg2) ? (
-      set_articulation(offset, #str);
-      STATE=STATE_ART_SENT;
-    ): is_note_on(msg1) && use_default ? (
-      send_ks_for_articulation(offset, 0);
-    );
-  ): (STATE == STATE_ART_SENT) ? (
-    is_note_on(msg1) && STATE=STATE_REST;
+  is_text_evt(msg1, msg2) ? (
+    set_articulation(str);
+  ) : is_note_on(msg1) ? (
+    check_articulation(offset, msg1 & $x0F, msg2);
   );
   midisend_str(offset, #str);
 );
+
 
 @gfx 360 360
 margin_left = 20;
 margin_top = 10;
 text_colour = 0.9;
-
 arts_loaded > 0 ? ( 
   gfx_setfont(1, "arial", 12, 'b');
+  gfx_measurestr("G#9G#9G#9G#9", note_width, note_height);
   gfx_a = 1;
   gfx_r = gfx_g = gfx_b = text_colour;
   gfx_x = margin_left;
   gfx_y = margin_top;
   gfx_printf("%d articulations loaded\n", arts_loaded);
   i = 0;
+  split_at = (arts_loaded / 2);
   loop(arts_loaded,
-    gfx_x = margin_left;
-    gfx_y = margin_top + (i + 1) * (gfx_texth + 5);
+    gfx_x = left = i < split_at ? 
+      margin_left : margin_left + (gfx_w / 2);
+    gfx_y = top = i < split_at ? 
+      margin_top + (i + 1) * (gfx_texth + 5):
+      margin_top + (i - split_at + 1 ) * (gfx_texth + 5);
+    gfx_y = top = margin_top + (1+( i % split_at)) * (gfx_texth +5);
     gfx_drawstr(art_keys_str + i);
-    gfx_x = 100;
+    gfx_x = note_width+left;
     gfx_drawstr(art_match_strings + i);
     i == ACTIVE_ART ? (
       gfx_r = gfx_b = 0;
       gfx_g = 1;
       gfx_a = 0.4;
-      gfx_rect(0, gfx_y, gfx_x, gfx_texth);
+      gfx_rect(left-margin_left, top, gfx_x, gfx_texth);
       gfx_r = gfx_b = gfx_g = text_colour;
       gfx_a = 1;
     );
