@@ -11,14 +11,15 @@ slider2:use_default=0<0,1,1{Off,On}>Use first articulation as the default
 ext_midi_bus = 1.0;
 
 MAX_ARTICULATIONS = 50;
-arts_loaded = 0;
+NUM_ARTS = 0;
+ACTIVE_ART = -1;
 
 // Store in global string array
 art_match_strings = 1;
 art_keys_str = art_match_strings + MAX_ARTICULATIONS;
 
 // KS midi are 4 byte numbers representing the max 4 key switch notes
-// in order from High to Low byte
+// in order from low to high byte
 articulation_ks_midi = 1;
 
 // note_art is an array holding a midi note number's assigned articulation
@@ -77,7 +78,7 @@ function load_arts() local (handle, i, art_str, keys, art_name) (
       );
     );
     file_close(handle);
-    arts_loaded = i;
+    NUM_ARTS = i;
   );
 );
 
@@ -85,7 +86,7 @@ function parse_notation(note_art_str) (
   art_match = -1;
   scan = 0;
   sprintf(#pnn, ">> %s", note_art_str);
-  while (scan < arts_loaded && (art_match < 0)) (
+  while (scan < NUM_ARTS && (art_match < 0)) (
     //#tmps = art_match_strings + scan;
     //#tmpy = art_keys_str + scan;
     
@@ -95,13 +96,6 @@ function parse_notation(note_art_str) (
   );
   art_match;
 );
-
-
-ACTIVE_ART = -1;
-STATE_REST = 0;
-STATE_ART_SENT = 1;
-STATE_NOTE_SENT = 2;
-STATE = STATE_REST;
 
 function is_text_evt(msg1, msg2) (
   msg1 == $xFF && msg2 == $x0F;
@@ -173,24 +167,26 @@ while (midirecv_str(offset, #str)) (
 margin_left = 20;
 margin_top = 10;
 text_colour = 0.9;
-arts_loaded > 0 ? ( 
+drawn_art = -2;
+NUM_ARTS > 0 && drawn_art != ACTIVE_ART ? ( 
   gfx_setfont(1, "arial", 12, 'b');
-  gfx_measurestr("G#9G#9G#9G#9", note_width, note_height);
+  gfx_measurestr("00 G#9G#9G#9G9", note_width, note_height);
   gfx_a = 1;
   gfx_r = gfx_g = gfx_b = text_colour;
   gfx_x = margin_left;
   gfx_y = margin_top;
-  gfx_printf("%d articulations loaded\n", arts_loaded);
+  gfx_printf("%d articulations loaded\n", NUM_ARTS);
   i = 0;
-  split_at = (arts_loaded / 2);
-  loop(arts_loaded,
+  split_at = floor((NUM_ARTS+1) / 2);
+  loop(NUM_ARTS,
     gfx_x = left = i < split_at ? 
       margin_left : margin_left + (gfx_w / 2);
-    gfx_y = top = i < split_at ? 
-      margin_top + (i + 1) * (gfx_texth + 5):
-      margin_top + (i - split_at + 1 ) * (gfx_texth + 5);
+    //gfx_y = top = i < split_at ? 
+      //margin_top + (i + 1) * (gfx_texth + 5):
+      //margin_top + (i - split_at + 1 ) * (gfx_texth + 5);
     gfx_y = top = margin_top + (1+( i % split_at)) * (gfx_texth +5);
-    gfx_drawstr(art_keys_str + i);
+    sprintf(#head, "%02d %s", i+1, art_keys_str + i);
+    gfx_drawstr(#head);
     gfx_x = note_width+left;
     gfx_drawstr(art_match_strings + i);
     i == ACTIVE_ART ? (
@@ -203,4 +199,5 @@ arts_loaded > 0 ? (
     );
     i += 1;
   );
+  drawn_art = ACTIVE_ART;
 );
