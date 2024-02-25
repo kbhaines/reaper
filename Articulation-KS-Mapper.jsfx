@@ -6,7 +6,7 @@ slider1:/articulation-maps:vsl-special-vi14.txt:Articulation Map
 slider2:use_default=0<0,50,1>Default Articulation # (0=none)
 slider3:aux_keyswitch=0<0,10,1{Off, C-1,C0,C1,C2,C3,C4,C5,C6,C7,C8>Auxiliary Keyswitches
 @slider
-
+  
 @init
 ext_midi_bus = 1.0;
 
@@ -18,13 +18,17 @@ ACTIVE_ART = -1;
 art_match_strings = 1;
 art_keys_str = art_match_strings + MAX_ARTICULATIONS;
 
-// KS midi are 4 byte numbers representing the max 4 key switch notes
+// KS midi are 4 byte numbers representing the max 4 key switch notes or CC data
 // in order from low to high byte
-articulation_ks_midi = 1;
+art_ks_midi = 1;
+
+// Type is 4 byte numbers, representing the type of data found in 
+// art_ks_midi; 0 for normal notes, or > 0 for a midi CC id
+art_ks_type = art_ks_midi + MAX_ARTICULATIONS;
 
 // note_art is an array holding a midi note number's assigned articulation
 // indexed by chan * 128 + note_id
-note_art = articulation_ks_midi + MAX_ARTICULATIONS;
+note_art = art_ks_type + MAX_ARTICULATIONS;
 note_art_size = 128 * 16;
 memset(note_art, -1, note_art_size);
 
@@ -33,33 +37,38 @@ function blip_note(offset, chan, note) (
   midisend(offset, $x80+chan, note, 0);
 );
 
-function parse_note_seq(note_seq) 
+function parse_note_seq(note_seq, idx) 
   local(seq, note, oct, acc, i, rest) (
-  acc = 0;
+  data = 0;
+  type = 0;
   i = 0;
   strcpy(seq, note_seq);
   while (strlen(seq) > 1 && i < 4) (
-    match("C%d%0s", seq, oct, #rest)  ? ( note = 0 ):
-    match("C#%d%0s", seq, oct, #rest) ? ( note = 1 ):
+    cc_id = 0;
+    match("cc%d.%d%0s", seq, cc_id, cc_data, #rest) ? (value=cc_data):
+    match("C%d%0s", seq, oct, #rest)  ? ( value = 0 ):
+    match("C#%d%0s", seq, oct, #rest) ? ( value = 1 ):
   
-    match("D%d%0s", seq, oct, #rest)  ? ( note = 2 ):
-    match("D#%d%0s", seq, oct, #rest) ? ( note = 3 ):
+    match("D%d%0s", seq, oct, #rest)  ? ( value = 2 ):
+    match("D#%d%0s", seq, oct, #rest) ? ( value = 3 ):
   
-    match("E%d%0s", seq, oct, #rest)  ? ( note = 4 ):
-    match("F%d%0s", seq, oct, #rest)  ? ( note = 5 ):
-    match("F#%d%0s", seq, oct, #rest) ? ( note = 6 ):
+    match("E%d%0s", seq, oct, #rest)  ? ( value = 4 ):
+    match("F%d%0s", seq, oct, #rest)  ? ( value = 5 ):
+    match("F#%d%0s", seq, oct, #rest) ? ( value = 6 ):
   
-    match("G%d%0s", seq, oct, #rest)  ? ( note = 7 ):
-    match("G#%d%0s", seq, oct, #rest) ? ( note = 8 ):
-    match("A%d%0s", seq, oct, #rest)  ? ( note = 9 ):
-    match("A#%d%0s", seq, oct, #rest) ? ( note = 10 ):
-    match("B%d%0s", seq, oct, #rest)  ? ( note = 11 ): (note = 99);
+    match("G%d%0s", seq, oct, #rest)  ? ( value = 7 ):
+    match("G#%d%0s", seq, oct, #rest) ? ( value = 8 ):
+    match("A%d%0s", seq, oct, #rest)  ? ( value = 9 ):
+    match("A#%d%0s", seq, oct, #rest) ? ( value = 10 ):
+    match("B%d%0s", seq, oct, #rest)  ? ( value = 11 ): (value = 127);
 
     strcpy(seq, #rest);
-    acc += (1 + note + (oct + 1) * 12) << (i * 8);
+    type += cc_id  << (i * 8);
+    data += (cc_id ? value+1 : (value + 1 + (oct + 1) * 12)) << (i * 8);
     i+=1;
   );
-  acc;
+  art_ks_midi[idx] = data;
+  art_ks_type[idx] = type;
 );
 
 function load_arts() local (handle, i, art_str, keys, art_name) (
@@ -69,12 +78,14 @@ function load_arts() local (handle, i, art_str, keys, art_name) (
   !((handle = file_open(#art_filename)) < 0) ? ( // file_open successful
     i = 0;
     while (file_string(handle,#art_str) > 0 && i < MAX_ARTICULATIONS) (
-      match("%S %s\n*",#art_str,#keys,#art_name) ||
-      match("%S %s\r*",#art_str,#keys,#art_name) ? (
-        strcpy(art_match_strings+i, #art_name);
-        strcpy(art_keys_str+i, #keys);
-        articulation_ks_midi[i] = parse_note_seq(#keys);
-        i += 1;
+      !match(";*", #art_str) ? (
+        match("%S %s\n*",#art_str,#keys,#art_name) ||
+        match("%S %s\r*",#art_str,#keys,#art_name) ? (
+          strcpy(art_match_strings+i, #art_name);
+          strcpy(art_keys_str+i, #keys);
+          parse_note_seq(#keys, i);
+          i += 1;
+        );
       );
     );
     file_close(handle);
@@ -94,6 +105,8 @@ function parse_notation(note_art_str) (
       art_match = scan;
     scan += 1;
   );
+  sprintf(#pn2, "%X", art_ks_type[art_match]);
+  sprintf(#pn1, "%X",art_ks_midi[art_match]);
   art_match;
 );
 
@@ -108,12 +121,17 @@ function is_note_on(msg1) (
 
 function send_ks_for_articulation(offset, chan, art_id) (
   art_id != ACTIVE_ART ? (
-    ks_midi = articulation_ks_midi[art_id];
+    ks_midi = art_ks_midi[art_id];
+    ks_type = art_ks_type[art_id];
     //sprintf(#ks_xx, "%X", ks_midi);
     while (ks_midi) (
     // TODO  -1?
-      blip_note(offset, chan, (ks_midi & $xFF)-1);
+      type = ks_type & $xFF;
+      value = (ks_midi & $xFF) - 1;
+      type > 0 ? midisend(offset, $xB0 + chan, type, value): 
+        blip_note(offset, chan, value);
       ks_midi = ks_midi >> 8;
+      ks_type = ks_type >> 8;
     );
     ACTIVE_ART = art_id;
   );
@@ -165,13 +183,13 @@ while (midirecv_str(offset, #str)) (
 
 
 @gfx 360 360
-margin_left = 20;
+margin_left = 10;
 margin_top = 10;
 text_colour = 0.9;
 drawn_art = -2;
 NUM_ARTS > 0 && drawn_art != ACTIVE_ART ? ( 
   gfx_setfont(1, "arial", 12, 'b');
-  gfx_measurestr("00 G#9G#9G#9G9", note_width, note_height);
+  gfx_measurestr("00. G#9G#9G#9G9", note_width, note_height);
   gfx_a = 1;
   gfx_r = gfx_g = gfx_b = text_colour;
   gfx_x = margin_left;
@@ -186,7 +204,7 @@ NUM_ARTS > 0 && drawn_art != ACTIVE_ART ? (
       //margin_top + (i + 1) * (gfx_texth + 5):
       //margin_top + (i - split_at + 1 ) * (gfx_texth + 5);
     gfx_y = top = margin_top + (1+( i % split_at)) * (gfx_texth +5);
-    sprintf(#head, "%02d %s", i+1, art_keys_str + i);
+    sprintf(#head, "%02d. %s", i+1, art_keys_str + i);
     gfx_drawstr(#head);
     gfx_x = note_width+left;
     gfx_drawstr(art_match_strings + i);

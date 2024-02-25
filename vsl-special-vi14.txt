@@ -5,7 +5,7 @@ C1D2 *_detache
 C1D#2 *_legrep
 C1E2 *_spicrep
 C#1C#2 articulation marcato
-C#1D2 *_xftrem
+; C#1D2cc20.75 articulation fermata
 D1C2 *slur begin
 D1C2 *slur continue
 D1C2 *slur end
