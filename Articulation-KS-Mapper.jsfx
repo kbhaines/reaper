@@ -3,8 +3,8 @@ in_pin:none
 out_pin:none
 
 slider1:/articulation-maps:vsl-special-vi14.txt:Articulation Map
-slider2:use_default=0<0,1,1{Off,On}>Use first articulation as the default
-
+slider2:use_default=0<0,50,1>Default Articulation # (0=none)
+slider3:aux_keyswitch=0<0,10,1{Off, C-1,C0,C1,C2,C3,C4,C5,C6,C7,C8>Auxiliary Keyswitches
 @slider
 
 @init
@@ -131,6 +131,7 @@ function set_articulation(str) (
 function check_articulation(offset, chan, note_id) (
   i = chan * 128 + note_id;
   art_id = note_art[i];
+  art_id == -1 && use_default ? art_id = use_default-1;
   art_id >= 0 ? (
     send_ks_for_articulation(offset, chan, art_id);
     note_art[i] = -1;

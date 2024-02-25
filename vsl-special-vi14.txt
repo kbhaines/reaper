@@ -7,7 +7,11 @@ C1E2 *_spicrep
 C#1C#2 articulation marcato
 C#1D2 *_xftrem
 D1C2 *slur begin
+D1C2 *slur continue
+D1C2 *slur end
 D1C#2 *slur begin technique slide
+D1C#2 *slur continue technique slide
+D1C#2 *slur end technique slide
 D#1C2 *_sfz
 D#1C#2 *_sfz_xf_trem
 D#1D2 *_fp
