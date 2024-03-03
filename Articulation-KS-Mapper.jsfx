@@ -42,8 +42,9 @@ function parse_note_seq(note_seq, idx)
   data = 0;
   type = 0;
   i = 0;
+  value = 0;
   strcpy(seq, note_seq);
-  while (strlen(seq) > 1 && i < 4) (
+  while (strlen(seq) > 1 && i < 4 && value != 127) (
     cc_id = 0;
     match("cc%d.%d%0s", seq, cc_id, cc_data, #rest) ? (value=cc_data):
     match("C%d%0s", seq, oct, #rest)  ? ( value = 0 ):
@@ -62,13 +63,17 @@ function parse_note_seq(note_seq, idx)
     match("A#%d%0s", seq, oct, #rest) ? ( value = 10 ):
     match("B%d%0s", seq, oct, #rest)  ? ( value = 11 ): (value = 127);
 
+
     strcpy(seq, #rest);
     type += cc_id  << (i * 8);
     data += (cc_id ? value+1 : (value + 1 + (oct + 1) * 12)) << (i * 8);
     i+=1;
   );
-  art_ks_midi[idx] = data;
-  art_ks_type[idx] = type;
+  value < 127 ? (
+    art_ks_midi[idx] = data;
+    art_ks_type[idx] = type;
+  );
+  value;
 );
 
 function load_arts() local (handle, i, art_str, keys, art_name) (
@@ -79,12 +84,14 @@ function load_arts() local (handle, i, art_str, keys, art_name) (
     i = 0;
     while (file_string(handle,#art_str) > 0 && i < MAX_ARTICULATIONS) (
       !match(";*", #art_str) ? (
-        match("%S %s\n*",#art_str,#keys,#art_name) ||
-        match("%S %s\r*",#art_str,#keys,#art_name) ? (
+        match("%S %S;*\n*",#art_str,#keys,#art_name) ||
+        match("%S %s*\n*",#art_str,#keys,#art_name) ||
+        match("%S %S;*\r*",#art_str,#keys,#art_name) ||
+        match("%S %s*\r*",#art_str,#keys,#art_name)
+        ? (
           strcpy(art_match_strings+i, #art_name);
           strcpy(art_keys_str+i, #keys);
-          parse_note_seq(#keys, i);
-          i += 1;
+          parse_note_seq(#keys, i) < 127 ? i += 1;
         );
       );
     );

@@ -1,0 +1,97 @@
+; Sustain
+cc32.1 _sustain;  Generic
+cc32.2 art1;  Alternative
+cc32.3 art1;  Octave
+cc32.4 art1;  Octave muted
+cc32.5 art1;  Small (1/2)
+cc32.6 art1;  Small muted
+cc32.7 art1;  Muted
+cc32.8 art1;  Soft (flaut/hollow)
+cc32.9 art1;  Hard (cuivre/overb)
+cc32.10 art1; Harmonic
+cc32.11 ornament tremolo; Tremolo/flutter
+cc32.12 art1; Tremolo muted
+cc32.13 art1; Tremolo soft/low
+cc32.14 art1; Tremolo hard/high
+cc32.15 art1; Tremolo muted low
+cc32.16 art1; Vibrato (molto vib)
+cc32.17 art1; Higher (sultasto/bells up) 18 Lower (sul pont)
+cc32.19 art1; Lower muted
+
+Legato
+cc32.20 art1; Generic
+cc32.21 art1; Alternative
+cc32.22 art1; Octave
+cc32.23 art1; Octave muted
+cc32.24 art1; Small
+cc32.25 art1; Small muted
+cc32.26 art1; Muted Decorative
+cc32.27 art1; Soft
+cc32.28 art1; Hard
+cc32.29 art1; Harmonic
+cc32.30 art1; Tremolo
+cc32.31 art1; Slow (port/gliss) 32 Fast
+cc32.33 art1; Run
+cc32.34 art1; Detache 
+cc32.35 art1; Higher 
+cc32.36 art1; Lower
+
+Short
+40 Generic
+41 Alternative
+42 Very short (spicc)
+43 Very short (soft)
+cc32.42 articulation staccato; Leisurely (stacc)
+45 Octave
+46 Octave muted
+47 Muted
+48 Soft (brush/feather) 
+49 Hard (dig)
+50 Tenuto
+51 Tenuto Soft
+52 Marcato
+53 Marcato Soft
+54 Marcato Hard
+55 Marcato Long
+cc32.56 ornament pluck; Plucked (pizz)
+57 Plucked hard (bartok) 
+58 Struck (col leg)
+59 Higher
+60 Lower
+61 Harmonic
+
+Decorative
+70 Trill (minor2nd) 
+71 Trill (major 2nd) 
+72 Trill (minor 3rd) 
+73 Trill (major 3rd) 
+74 Trill (perfect 4th) 
+75 Multitongue
+76 Multitongue muted
+
+80 Synced - 120bpm (trem/trill) 
+81 Synced - 150bpm (trem/trill) 
+82 Synced - 180bpm (trem/trill)
+
+Phrases & Dynamics
+90 FX 1
+91 FX 2
+92 FX 3
+93 FX 4
+94 FX 5
+95 FX 6
+96 FX 7
+97 FX 8
+98 FX 9
+99 FX 10
+100 Up (rips/runs)
+101 Downs (falls/runs) 
+102 Crescendo
+103 Decrescendo 
+104 Arc
+105 Slides
+
+Various
+110 Disco up (rips)
+111 Disco down (falls)
+112 Single string (Sul C/G/etc.)
