@@ -20,11 +20,11 @@ art_keys_str = art_match_strings + MAX_ARTICULATIONS;
 
 // KS midi are 4 byte numbers representing the max 4 key switch notes or CC data
 // in order from low to high byte
-art_ks_midi = 1;
+art_ks_data = 1;
 
 // Type is 4 byte numbers, representing the type of data found in 
-// art_ks_midi; 0 for normal notes, or > 0 for a midi CC id
-art_ks_type = art_ks_midi + MAX_ARTICULATIONS;
+// art_ks_data; 0 for normal notes, or > 0 for a midi CC id
+art_ks_type = art_ks_data + MAX_ARTICULATIONS;
 
 // note_art is an array holding a midi note number's assigned articulation
 // indexed by chan * 128 + note_id
@@ -32,48 +32,62 @@ note_art = art_ks_type + MAX_ARTICULATIONS;
 note_art_size = 128 * 16;
 memset(note_art, -1, note_art_size);
 
-function blip_note(offset, chan, note) (
-  midisend(offset, $x90+chan, note, 127);
+function blip_note(offset, chan, note, vel) (
+  midisend(offset, $x90+chan, note, vel);
   midisend(offset, $x80+chan, note, 0);
 );
 
-function parse_note_seq(note_seq, idx) 
-  local(seq, note, oct, acc, i, rest) (
-  data = 0;
-  type = 0;
+function parse_note_seq(note_seq, idx)
+  local(seq, note, oct, acc, i, rest, type, data) (
+  data_32 = 0;
+  type_32 = 0;
   i = 0;
-  value = 0;
+  type = 0;
+  data = 0;
   strcpy(seq, note_seq);
-  while (strlen(seq) > 1 && i < 4 && value != 127) (
-    cc_id = 0;
-    match("cc%d.%d%0s", seq, cc_id, cc_data, #rest) ? (value=cc_data):
-    match("C%d%0s", seq, oct, #rest)  ? ( value = 0 ):
-    match("C#%d%0s", seq, oct, #rest) ? ( value = 1 ):
+  while (strlen(seq) > 1 && i < 4 && type != -1) (
+    type = -1;
+    data = 127;
+    match("cc%d.%d%0s", seq, cc_id, cc_data, #rest) ? (type = 128 + cc_id; data=cc_data):
+    match("C%d.%d%0s", seq, oct, vel, #rest) ? (type = 0; data = vel):
+    match("C%d%0s", seq, oct, #rest)  ? ( type = 0 ):
+    match("C#%d%0s", seq, oct, #rest) ? ( type = 1 ):
   
-    match("D%d%0s", seq, oct, #rest)  ? ( value = 2 ):
-    match("D#%d%0s", seq, oct, #rest) ? ( value = 3 ):
+    match("D%d%0s", seq, oct, #rest)  ? ( type = 2 ):
+    match("D#%d%0s", seq, oct, #rest) ? ( type = 3 ):
   
-    match("E%d%0s", seq, oct, #rest)  ? ( value = 4 ):
-    match("F%d%0s", seq, oct, #rest)  ? ( value = 5 ):
-    match("F#%d%0s", seq, oct, #rest) ? ( value = 6 ):
+    match("E%d%0s", seq, oct, #rest)  ? ( type = 4 ):
+    match("F%d%0s", seq, oct, #rest)  ? ( type = 5 ):
+    match("F#%d%0s", seq, oct, #rest) ? ( type = 6 ):
   
-    match("G%d%0s", seq, oct, #rest)  ? ( value = 7 ):
-    match("G#%d%0s", seq, oct, #rest) ? ( value = 8 ):
-    match("A%d%0s", seq, oct, #rest)  ? ( value = 9 ):
-    match("A#%d%0s", seq, oct, #rest) ? ( value = 10 ):
-    match("B%d%0s", seq, oct, #rest)  ? ( value = 11 ): (value = 127);
+    match("G%d%0s", seq, oct, #rest)  ? ( type = 7 ):
+    match("G#%d%0s", seq, oct, #rest) ? ( type = 8 ):
+    match("A%d%0s", seq, oct, #rest)  ? ( type = 9 ):
+    match("A#%d%0s", seq, oct, #rest) ? ( type = 10 ):
+    match("B%d%0s", seq, oct, #rest)  ? ( type = 11 ):(type = -1); // TODO!
 
+    sprintf(#xxx, "%X", type);
+    type != -1 ? (
+      // If a note, add octave offset
+      type < 128 ? type += 1 + (oct + 1)*12;
 
-    strcpy(seq, #rest);
-    type += cc_id  << (i * 8);
-    data += (cc_id ? value+1 : (value + 1 + (oct + 1) * 12)) << (i * 8);
-    i+=1;
+      strcpy(seq, #rest);
+      // type 0-127 = note ID, data = velocity
+      // type 128-255 = ccID, data = cc_value 
+      //type += cc_id  << (i * 8);
+      type_32 += type << (i * 8);
+      data_32 += data << (i * 8);
+      i+=1;
+    );
   );
-  value < 127 ? (
-    art_ks_midi[idx] = data;
-    art_ks_type[idx] = type;
+  type > -1 ? (
+    art_ks_type[idx] = type_32;
+    art_ks_data[idx] = data_32;
   );
-  value;
+  sprintf(#loaded_type, "%X", type_32);
+  sprintf(#loaded_data, "%X", data_32);
+  sprintf(#last_type, "%d", type);
+  type;
 );
 
 function load_arts() local (handle, i, art_str, keys, art_name) (
@@ -91,7 +105,7 @@ function load_arts() local (handle, i, art_str, keys, art_name) (
         ? (
           strcpy(art_match_strings+i, #art_name);
           strcpy(art_keys_str+i, #keys);
-          parse_note_seq(#keys, i) < 127 ? i += 1;
+          parse_note_seq(#keys, i) != -1 ? i += 1;
         );
       );
     );
@@ -113,7 +127,7 @@ function parse_notation(note_art_str) (
     scan += 1;
   );
   sprintf(#pn2, "%X", art_ks_type[art_match]);
-  sprintf(#pn1, "%X",art_ks_midi[art_match]);
+  sprintf(#pn1, "%X",art_ks_data[art_match]);
   art_match;
 );
 
@@ -126,19 +140,20 @@ function is_note_on(msg1) (
   (msg1 & $xF0) == $x90;
 );
 
-function send_ks_for_articulation(offset, chan, art_id) (
+function send_ks_for_articulation(offset, chan, art_id) local (ks_type, ks_data, type, data) (
   art_id != ACTIVE_ART ? (
-    ks_midi = art_ks_midi[art_id];
     ks_type = art_ks_type[art_id];
-    //sprintf(#ks_xx, "%X", ks_midi);
-    while (ks_midi) (
+    ks_data = art_ks_data[art_id];
+
+    sprintf(#ks_xx, "%X", ks_type);
+    while (ks_type) (
     // TODO  -1?
       type = ks_type & $xFF;
-      value = (ks_midi & $xFF) - 1;
-      type > 0 ? midisend(offset, $xB0 + chan, type, value): 
-        blip_note(offset, chan, value);
-      ks_midi = ks_midi >> 8;
+      data = ks_data & $xFF;
+      type > 127 ? midisend(offset, $xB0 + chan, type >> 1, data): 
+        blip_note(offset, chan, type - 1, data);
       ks_type = ks_type >> 8;
+      ks_data = ks_data >> 8;
     );
     ACTIVE_ART = art_id;
   );
@@ -147,8 +162,6 @@ function send_ks_for_articulation(offset, chan, art_id) (
 function set_articulation(str) (
   strcpy_from(#msga, #str, 2);
   match("NOTE %d %d %s", #msga, note_chan, note_id, #art_str) ? (
-    //sprintf(#matched,"%s %d %d %d", #art_str, note_chan, note_id,
-      //parse_notation(#art_str));
     note_art[note_chan * 128 + note_id] = parse_notation(#art_str);
   );
 );

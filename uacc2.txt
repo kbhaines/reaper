@@ -7,7 +7,7 @@ cc32.5 art1;  Small (1/2)
 cc32.6 art1;  Small muted
 cc32.7 art1;  Muted
 cc32.8 art1;  Soft (flaut/hollow)
-cc32.9 art1;  Hard (cuivre/overb)
+cc32.9 articulation marcato;  Hard (cuivre/overb)
 cc32.10 art1; Harmonic
 cc32.11 ornament tremolo; Tremolo/flutter
 cc32.12 art1; Tremolo muted
