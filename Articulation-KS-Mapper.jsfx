@@ -144,14 +144,25 @@ function send_ks_for_articulation(offset, chan, art_id) local (ks_type, ks_data,
   art_id != ACTIVE_ART ? (
     ks_type = art_ks_type[art_id];
     ks_data = art_ks_data[art_id];
-
-    sprintf(#ks_xx, "%X", ks_type);
+    
+    // Make two passes; 1st pass is note-on and midi CC,
+    // 2nd pass is note-off only. This allows UACC/KS to combine
+    // articulations.
     while (ks_type) (
-    // TODO  -1?
       type = ks_type & $xFF;
       data = ks_data & $xFF;
-      type > 127 ? midisend(offset, $xB0 + chan, type >> 1, data): 
-        blip_note(offset, chan, type - 1, data);
+      type > 127 ? 
+        midisend(offset, $xB0 + chan, type >> 1, data): 
+        midisend(offset, $x90+chan, type-1, data);
+      ks_type = ks_type >> 8;
+      ks_data = ks_data >> 8;
+    );
+    ks_type = art_ks_type[art_id];
+    ks_data = art_ks_data[art_id];
+    while (ks_type) (
+      type = ks_type & $xFF;
+      data = ks_data & $xFF;
+      type < 128 ? midisend(offset, $x80+chan, type-1, 0);
       ks_type = ks_type >> 8;
       ks_data = ks_data >> 8;
     );
