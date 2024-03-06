@@ -4,13 +4,12 @@ out_pin:none
 
 slider1:/articulation-maps:vsl-special-vi14.txt:Articulation Map
 slider2:use_default=0<0,50,1>Default Articulation # (0=none)
-slider3:aux_keyswitch=0<0,10,1{Off, C-1,C0,C1,C2,C3,C4,C5,C6,C7,C8>Auxiliary Keyswitches
-@slider
-  
+slider3:aux_keyswitch=0<0,10,1{Off, C-1,C0,C1,C2,C3,C4,C5,C6,C7,C8>Auxiliary Keyswitches (key access to first 12 articulations)
+
 @init
 ext_midi_bus = 1.0;
 
-MAX_ARTICULATIONS = 50;
+MAX_ARTICULATIONS = 80;
 NUM_ARTS = 0;
 ACTIVE_ART = -1;
 
@@ -18,13 +17,14 @@ ACTIVE_ART = -1;
 art_match_strings = 1;
 art_keys_str = art_match_strings + MAX_ARTICULATIONS;
 
-// KS midi are 4 byte numbers representing the max 4 key switch notes or CC data
-// in order from low to high byte
-art_ks_data = 1;
-
-// Type is 4 byte numbers, representing the type of data found in 
-// art_ks_data; 0 for normal notes, or > 0 for a midi CC id
+// Type is 4 8-bit values; each 8 bits is either 1-127 for normal notes (note + 1), 
+// or 128-255 for a midi CC id (CCid + 128). The lowest 8 bits are the first
+// part of the switch sequence to send
 art_ks_type = art_ks_data + MAX_ARTICULATIONS;
+
+// KS midi are 4 8-bit values, which depending on the corresponding 8bits in
+// art_ks_type can be either note velocity or CC data.
+art_ks_data = 1;
 
 // note_art is an array holding a midi note number's assigned articulation
 // indexed by chan * 128 + note_id
@@ -180,16 +180,24 @@ function set_articulation(str) (
 function check_articulation(offset, chan, note_id) (
   i = chan * 128 + note_id;
   art_id = note_art[i];
-  art_id == -1 && use_default ? art_id = use_default-1;
+  art_id == -1 && DEFAULT_ART ? art_id = DEFAULT_ART-1;
   art_id >= 0 ? (
     send_ks_for_articulation(offset, chan, art_id);
     note_art[i] = -1;
   );
 );
   
+  
+function handle_aux_keyswitch(note) (
+  aux_keyswitch > 0 ? (
+    lower = (aux_keyswitch-1) * 12;
+    note >= lower && note < lower + 12 ? DEFAULT_ART = 1 + note - lower;
+  );
+);
 
 @slider
 load_arts();
+DEFAULT_ART=use_default;
 
 // TEST DATA
 //test_pn = parse_notation("phrase 1 slur begin");
@@ -207,6 +215,7 @@ while (midirecv_str(offset, #str)) (
   is_text_evt(msg1, msg2) ? (
     set_articulation(str);
   ) : is_note_on(msg1) ? (
+    handle_aux_keyswitch(msg2);
     check_articulation(offset, msg1 & $x0F, msg2);
   );
   midisend_str(offset, #str);
