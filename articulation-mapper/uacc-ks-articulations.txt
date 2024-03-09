@@ -1,3 +1,21 @@
+This is an example of using Reaper's built-in articulations mapped to UACC
+controls. The file is also ordered so that the first 12 articulations are my
+most used; this allows the first 12 articulations to be accessed by a simple
+keyswitch should you want do so.
+
+C-1.1 Generic
+C-1.8 Soft_(flaut/hollow)
+C-1.9 articulation marcato; Hard_(cuivre/overb)
+C-1.42 articulation staccato; Short_Very_short_(spicc)
+C-1.50 articulation tenuto; Short_Tenuto
+C-1.52 articulation portato; Short_Marcato
+C-1.11 ornament tremolo; Tremolo/flutter
+C-1.70 ornament trill; Trill_(minor2nd)
+C-1.71 ornament whole_note_trill; Trill_(major_2nd)
+C-1.56 ornament pluck; Short_Plucked_(pizz)
+C-1.57 ornament snap; Short_Plucked_hard_(bartok)
+C-1.58 Short_Struck_(col_leg)
+
 Sustain
 C-1.1 Generic
 C-1.2 Alternative
