@@ -1,4 +1,4 @@
-; VSL special editions 1+2 and PLUS packs
+VSL special editions 1+2 and PLUS packs
 
 C1C2 articulation staccato; Rest ignored
 C#1C2 *_sustain
