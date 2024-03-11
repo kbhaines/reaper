@@ -154,7 +154,7 @@ function send_ks_for_articulation(offset, chan, art_id) local (ks_type, ks_data,
       sprintf(#ks_type, "%X", type);
       sprintf(#ks_data, "%X", data);
       type > 127 ? 
-        midisend(offset, $xB0 + chan, type >> 1, data): 
+        midisend(offset, $xB0 + chan, type-128, data): 
         midisend(offset, $x90+chan, type-1, data);
       ks_type = ks_type >> 8;
       ks_data = ks_data >> 8;

@@ -15,7 +15,7 @@ The file format supports the following elements (or combinations thereof):
 
 Note:
 * Elements are **CASE SENSITIVE**
-* UACC/KS is specific to Spitfire, and this plugin only supports keyswitches on a 'C' note 
+* UACC/KS is specific to Spitfire, and this plugin only supports UACC/KS keyswitches on a 'C' note 
 
 You can put **up to 4** of these elements together in a sequence.  Elements in the
 sequence are sent in the order specified; all notes are set to ON, then all
