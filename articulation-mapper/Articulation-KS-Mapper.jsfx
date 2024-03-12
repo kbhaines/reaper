@@ -4,7 +4,7 @@ out_pin:none
 
 slider1:/articulation-maps:vsl-special-vi14.txt:Articulation Map
 slider2:use_default=0<0,80,1>Default Articulation # (0=none)
-slider3:aux_keyswitch=0<0,10,1{Off, C-1,C0,C1,C2,C3,C4,C5,C6,C7,C8>Auxiliary Keyswitches (key access to first 12 articulations)
+slider3:aux_keyswitch=0<0,10,1{Off, C-1,C0,C1,C2,C3,C4,C5,C6,C7,C8>Auxiliary Keyswitches (Change Default using Keys)
 
 @init
 ext_midi_bus = 1.0;
@@ -31,11 +31,6 @@ art_ks_data = art_ks_type + MAX_ARTICULATIONS;
 note_art = art_ks_type + MAX_ARTICULATIONS;
 note_art_size = 128 * 16;
 memset(note_art, -1, note_art_size);
-
-function blip_note(offset, chan, note, vel) (
-  midisend(offset, $x90+chan, note, vel);
-  midisend(offset, $x80+chan, note, 0);
-);
 
 function parse_note_seq(note_seq, idx)
   local(seq, note, oct, acc, i, rest, type, data) (
@@ -66,7 +61,6 @@ function parse_note_seq(note_seq, idx)
     match("A#%d%0s", seq, oct, #rest) ? ( type = 10 ):
     match("B%d%0s", seq, oct, #rest)  ? ( type = 11 ):(type = -1); // TODO!
 
-    sprintf(#xxx, "%X", type);
     type != -1 ? (
       // If a note, add octave offset
       type < 128 ? type += 1 + (oct + 1)*12;
@@ -92,7 +86,6 @@ function parse_note_seq(note_seq, idx)
 
 function load_arts() local (handle, i, art_str, keys, art_name) (
 
-  // TODO: File change/reload logic
   strcpy_fromslider(#art_filename, slider1);
   !((handle = file_open(#art_filename)) < 0) ? ( // file_open successful
     i = 0;
@@ -117,17 +110,11 @@ function load_arts() local (handle, i, art_str, keys, art_name) (
 function parse_notation(note_art_str) (
   art_match = -1;
   scan = 0;
-  sprintf(#pnn, ">> %s", note_art_str);
   while (scan < NUM_ARTS && (art_match < 0)) (
-    //#tmps = art_match_strings + scan;
-    //#tmpy = art_keys_str + scan;
-    
     match(art_match_strings + scan, note_art_str) ? 
       art_match = scan;
     scan += 1;
   );
-  sprintf(#pn2, "%X", art_ks_type[art_match]);
-  sprintf(#pn1, "%X",art_ks_data[art_match]);
   art_match;
 );
 
@@ -151,8 +138,6 @@ function send_ks_for_articulation(offset, chan, art_id) local (ks_type, ks_data,
     while (ks_type) (
       type = ks_type & $xFF;
       data = ks_data & $xFF;
-      sprintf(#ks_type, "%X", type);
-      sprintf(#ks_data, "%X", data);
       type > 127 ? 
         midisend(offset, $xB0 + chan, type-128, data): 
         midisend(offset, $x90+chan, type-1, data);
@@ -195,21 +180,12 @@ function handle_aux_keyswitch(note) local (res) (
     lower = (aux_keyswitch-1) * 12;
     note >= lower && note < lower + 12 ? (
       use_default = 1 + note - lower;
-
     );
   );
 );
 
 @slider
 load_arts();
-//DEFAULT_ART=use_default;
-
-// TEST DATA
-//test_pn = parse_notation("phrase 1 slur begin");
-//sprintf(#test_pn, "%X", test_pn);
-//#test_pn_expected = "191B0000";
-//sprintf(#test_pns, "%X", parse_note_seq("C-1C2C3F#0"));
-//#test_pns_expected = "1253113";
 
 @block
 while (midirecv_str(offset, #str)) (
@@ -245,9 +221,6 @@ NUM_ARTS > 0 && drawn_art != ACTIVE_ART ? (
   loop(NUM_ARTS,
     gfx_x = left = i < split_at ? 
       margin_left : margin_left + (gfx_w / 2);
-    //gfx_y = top = i < split_at ? 
-      //margin_top + (i + 1) * (gfx_texth + 5):
-      //margin_top + (i - split_at + 1 ) * (gfx_texth + 5);
     gfx_y = top = margin_top + (1+( i % split_at)) * (gfx_texth +5);
     sprintf(#head, "%02d. %s", i+1, art_keys_str + i);
     gfx_drawstr(#head);
