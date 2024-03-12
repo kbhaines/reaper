@@ -39,7 +39,7 @@ active articulations in the UI.
 ## Installation
 
 - Copy the [JSFX](Articulation-KS-Mapper.jsfx) to your `REAPER/Effects` folder.
-- Copy the [articulation maps folder](articulation-maps) into the `REAPER/Data/articulation-maps` folder (you will need to create this)
+- Copy the [articulation maps folder](articulation-maps) into the `REAPER/Data` folder.
 
 ## Usage
 
