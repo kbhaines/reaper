@@ -1,16 +1,18 @@
-This is the base file for UACC, which defines the articulations by the name
-given by Spitfire Audio. There is a corresponding `reaper-notation-uacc.txt`
-file that will populate Reaper's 'Custom Notation' menu.
+; This is the base file for UACC, which defines the articulations by the name
+; given by Spitfire Audio. There is a corresponding `reaper-notation-uacc.txt`
+; file that will populate Reaper's 'Custom Notation' menu.
+; 
+; See `uacc-ks-articulations.txt` for a more Reaper-centric example, using
+; Reaper's built-in articulations and ornaments.
+; 
+; This file also demonstrates the UACC format, which is:
+; 
+;   C[N].[vel]
 
-See `uacc-ks-articulations.txt` for a more Reaper-centric example, using
-Reaper's built-in articulations and ornaments.
-
-This file also demonstrates the UACC format, which is:
-
-    C[N].[vel]
-
-Where [N] is a number from -1 to 7, and [vel] is the velocity of the note.
-This format only supports notes on 'C'.
+; Where [N] is a number from -1 to 7, and [vel] is the velocity of the note.
+; This format only supports notes on 'C'.
+;
+; C-1 in this file is C-2 in Kontact, which is the default for UACC/KS.
 
 Sustain
 C-1.1 Generic

@@ -28,7 +28,7 @@ art_ks_data = art_ks_type + MAX_ARTICULATIONS;
 
 // note_art is an array holding a midi note number's assigned articulation
 // indexed by chan * 128 + note_id
-note_art = art_ks_type + MAX_ARTICULATIONS;
+note_art = art_ks_data + MAX_ARTICULATIONS;
 note_art_size = 128 * 16;
 memset(note_art, -1, note_art_size);
 
