@@ -104,9 +104,6 @@ function parse_note_seq(note_seq, idx)
     art_ks_type[idx] = type_32;
     art_ks_data[idx] = data_32;
   );
-  sprintf(#loaded_type, "%X", type_32);
-  sprintf(#loaded_data, "%X", data_32);
-  sprintf(#last_type, "%d", type);
   type;
 );
 

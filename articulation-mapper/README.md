@@ -110,7 +110,8 @@ D#1 ornament tremolo
 
 D1D#1 articulation marcato ornament tremolo
 
-; This uses a MIDI CC value hard-coded to set the amount of tremolo:
+; Alternatively, this uses a MIDI CC value hard-coded to set the amount of tremolo:
+; (NB it won't 'fire' because the articulation above matches first)
 
 D1D#1cc20.64 articulation marcato ornament tremolo
 
