@@ -1,6 +1,6 @@
-VSL special editions 1+2 and PLUS packs
+; VSL special editions 1+2 and PLUS packs
 
-C1C2 articulation staccato; Rest ignored
+C1C2 articulation staccato
 C#1C2 *_sustain
 C1D2 *_detache
 C1D#2 *_legrep

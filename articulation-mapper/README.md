@@ -1,11 +1,42 @@
 # Articulation Mapper
 
-This JSFX plugin allows you to define articulations which hook into
-Reaper's built-in notation features.
+This JSFX plugin allows you to define articulations which are triggered via
+Reaper's built-in notation features. This is similar to Expression Maps in
+Cubase or Articulation Sets in LogicPro.
+
+Features:
+
+- Articulations are triggered by notation attached to notes
+- Midi Notes and CC triggers, up to 4 per articulation
+- Simultaneous notes can have different articulations (no need to slightly separate the notes)
+- Up to 80 articulations per instance
+- UI displays currently triggered articulation
+- Default articulation can be set (when notes have no notation attached)
+- Default articulation can be changed by keyswitch (allows you to mix keyswitching & notation)
+- Simple text file based configuration (examples for Spitfire & VSL included)
+
+Example of the UI:
 
 ![Screenshot of UI](ui1.png)
 
-## Overview
+# Installation
+
+- Copy the [JSFX](Articulation-KS-Mapper.jsfx) to your `REAPER/Effects` folder.
+- Copy the [articulation maps folder](articulation-maps) into the `REAPER/Data` folder.
+
+# Usage
+
+- Select the articulation map you want to use from the drop down
+
+- Set a default articulation for when a note has no notation associated with it;
+if you leave this as 0 then the articulations will 'latch' to the last selected
+articulation.
+
+- Add notation to your notes!
+
+# Articulation File Format and Example
+
+## Format Overview
 
 The file format supports the following elements (or combinations thereof):
 
@@ -15,7 +46,7 @@ The file format supports the following elements (or combinations thereof):
 
 Note:
 * Elements are **CASE SENSITIVE**
-* UACC/KS is specific to Spitfire, and this plugin only supports UACC/KS keyswitches on a 'C' note 
+* UACC/KS is specific to Spitfire; this plugin only supports UACC/KS keyswitches on a 'C' note 
 
 You can put **up to 4** of these elements together in a sequence.  Elements in the
 sequence are sent in the order specified; all notes are set to ON, then all
@@ -36,25 +67,15 @@ NOTE: C4 is middle C (midi #60)
 The plugin will ignore any lines it can't parse/recognise; you can see the
 active articulations in the UI.
 
-## Installation
-
-- Copy the [JSFX](Articulation-KS-Mapper.jsfx) to your `REAPER/Effects` folder.
-- Copy the [articulation maps folder](articulation-maps) into the `REAPER/Data` folder.
-
-## Usage
-
-- Select the articulation map you want to use from the drop down
-
-- Set a default articulation for when a note has no notation associated with it;
-if you leave this as 0 then the articulations will 'latch' to the last selected
-articulation.
-
-- Add notation to your notes!
-
-## Examples (not specific to any library):
-
 (Also, see the [articulation maps](articulation-maps) folder for more examples and
 starting points for your own use)
+
+## Example
+
+The following example demonstrates configuration for an imaginary library,
+relating to the notation given in the following Reaper midi item:
+
+![Example Articulations]( example1.png )
 
 ```
 ; Any lines that don't match an articulation specification are ignored so you
@@ -95,5 +116,3 @@ D1D#1cc20.64 articulation marcato ornament tremolo
 
 E1 ornament pluck; Pizzicato
 ```
-
-![Example Articulations]( example1.png )

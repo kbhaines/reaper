@@ -1,9 +1,8 @@
 ; SSO - Violins 1 UACC/KS
 
 ; This is an example of using Reaper's built-in articulations mapped to UACC
-; controls. The file is also ordered so that the first 12 articulations are my
-; most used; this allows the first 12 articulations to be accessed by the 
-; auxiliary keyswitch function.
+; controls. The file is also ordered to select 'favourite' articulations that
+; may be easily reached via Keyswitching to change the default articulation.
 
 C-1.1 Generic
 C-1.42 articulation spiccato; Short_Very_short_(spicc)

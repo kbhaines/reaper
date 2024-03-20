@@ -1,5 +1,5 @@
 ; This is the base file for UACC, which defines the articulations by the name
-; given by Spitfire Audio. There is a corresponding `reaper-notation-uacc.txt`
+; given by Spitfire Audio. There is a corresponding `reaper-notation-uacc.ini`
 ; file that will populate Reaper's 'Custom Notation' menu.
 ; 
 ; See `uacc-ks-articulations.txt` for a more Reaper-centric example, using

@@ -1,10 +1,36 @@
 desc:Articulation KS Mapper
+author: kbhaines
+version: 1.0
+changelog: Initial Release
+link: GitHub Home https://github.com/kbhaines/reaper/blob/main/articulation-mapper/README.md
+about:
+  # Articulation Mapper
+
+  This JSFX plugin allows you to define articulations which are triggered via
+  Reaper's built-in notation features. This is similar to Expression Maps in
+  Cubase or Articulation Sets in LogicPro.
+
+  See the GitHub home page for full instructions:
+
+  https://github.com/kbhaines/reaper/blob/main/articulation-mapper/README.md
+
+  Features:
+
+  - Articulations are triggered by notation attached to notes
+  - Midi Notes and CC triggers, up to 4 per articulation
+  - Simultaneous notes can have different articulations (no need to slightly separate the notes)
+  - Up to 80 articulations per instance
+  - UI displays currently triggered articulation
+  - Default articulation can be set (when notes have no notation attached)
+  - Default articulation can be changed by keyswitch (allows you to mix keyswitching & notation)
+  - Simple text file based configuration (examples for Spitfire & VSL included)
+
 in_pin:none
 out_pin:none
 
 slider1:/articulation-maps:vsl-special-vi14.txt:Articulation Map
 slider2:use_default=0<0,80,1>Default Articulation # (0=none)
-slider3:aux_keyswitch=0<0,10,1{Off, C-1,C0,C1,C2,C3,C4,C5,C6,C7,C8>Auxiliary Keyswitches (Change Default using Keys)
+slider3:aux_keyswitch=0<0,10,1{Off, C-1,C0,C1,C2,C3,C4,C5,C6,C7,C8>Change Default by keyswitch
 
 @init
 ext_midi_bus = 1.0;
