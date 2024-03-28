@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1" commit="14fc8c53d1db60b4366bb4e748354005d8e92f58" name="AM">
+  <category name="articulation-mapper">
+    <reapack name="Articulation-KS-Mapper.jsfx" type="effect" desc="Articulation KS Mapper">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel0 \b \fs36 Articulation Mapper\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 This JSFX plugin allows you to define articulations which are triggered via Reaper's built-in notation features. This is similar to Expression Maps in Cubase or Articulation Sets in LogicPro.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 See the GitHub home page for full instructions:\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 https://github.com/kbhaines/reaper/blob/main/articulation-mapper/README.md\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Features:\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Articulations are triggered by notation attached to notes\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Midi Notes and CC triggers, up to 4 per articulation\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Simultaneous notes can have different articulations (no need to slightly separate the notes)\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Up to 80 articulations per instance\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab UI displays currently triggered articulation\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Default articulation can be set (when notes have no notation attached)\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Default articulation can be changed by keyswitch (allows you to mix keyswitching & notation)\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Simple text file based configuration (examples for Spitfire & VSL included)\sa180\par}
+}
+]]></description>
+        <link rel="website" href="https://github.com/kbhaines/reaper/blob/main/articulation-mapper/README.md">GitHub Home</link>
+      </metadata>
+      <version name="1.0" author="kbhaines" time="2024-03-20T10:20:00Z">
+        <changelog><![CDATA[Initial Release]]></changelog>
+        <source>https://github.com/kbhaines/reaper/raw/906af95e6ab0cb57588a065ce147071caec179b1/articulation-mapper/Articulation-KS-Mapper.jsfx</source>
+      </version>
+    </reapack>
+  </category>
+</index>
