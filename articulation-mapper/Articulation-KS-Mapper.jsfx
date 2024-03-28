@@ -3,7 +3,7 @@ author: happyrat
 version: 1.01
 changelog: Initial Release
 link: GitHub Home https://github.com/kbhaines/reaper/blob/main/articulation-mapper/README.md
-provides: articulation-maps/*.map > Data/articulation-maps/
+provides: articulation-maps/ > Data/articulation-maps/
 about:
   # Articulation Mapper
 
