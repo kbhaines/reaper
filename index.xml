@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" commit="7817aae343bed07b61d4a00d13f0d82551ec1472" name="HappyRat">
+<index version="1" commit="82358b19f263cd6a8b9bf24ff90c6e8ed50352db" name="HappyRat">
   <category name="articulation-mapper">
     <reapack name="Articulation-KS-Mapper.jsfx" type="effect" desc="Articulation KS Mapper">
       <metadata>
