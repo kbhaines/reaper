@@ -1,6 +1,6 @@
 desc:Articulation KS Mapper
 author: happyrat
-version: 1.0
+version: 1.01
 changelog: Initial Release
 link: GitHub Home https://github.com/kbhaines/reaper/blob/main/articulation-mapper/README.md
 about:
@@ -25,8 +25,7 @@ about:
   - Default articulation can be changed by keyswitch (allows you to mix keyswitching & notation)
   - Simple text file based configuration (examples for Spitfire & VSL included)
 
-@provides
-  [data] articulation-maps/*.map > Data/articulation-maps/
+provides: [data] articulation-maps/*.map Data/articulation-maps/
 
 in_pin:none
 out_pin:none
