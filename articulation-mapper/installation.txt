@@ -1,8 +1,0 @@
-
-Installation
-
-- Copy Articulation-KS-Mapper.jsfx to the REAPER/Effects folder.
-- Copy the articulation-maps FOLDER into the REAPER/Data folder.
-
-(there should be a REAPER/Data/articulation-maps/ folder with the articulation
-maps in them when you've done this)
