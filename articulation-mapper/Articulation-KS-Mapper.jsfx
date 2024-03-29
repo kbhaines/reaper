@@ -1,9 +1,11 @@
 desc:Articulation KS Mapper
 author: happyrat
-version: 1.01
+version: 1.0.2
 changelog: Initial Release
 link: GitHub Home https://github.com/kbhaines/reaper/blob/main/articulation-mapper/README.md
-provides: articulation-maps/ > Data/articulation-maps/
+Provides: 
+  [data] articulation-maps/uacc-ks-base.txt
+
 about:
   # Articulation Mapper
 
