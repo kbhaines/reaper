@@ -4,7 +4,7 @@ version: 1.0.2
 changelog: Initial Release
 link: GitHub Home https://github.com/kbhaines/reaper/blob/main/articulation-mapper/README.md
 Provides: 
-  [data] articulation-maps/uacc-ks-base.txt
+  [data] articulation-maps/*.txt
 
 about:
   # Articulation Mapper
