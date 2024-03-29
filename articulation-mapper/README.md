@@ -21,7 +21,9 @@ Example of the UI:
 
 # Installation
 
-Use [ReaPack](https://reapack.com/user-guide) to install (preferred).
+Use [ReaPack](https://reapack.com/user-guide) to install the
+[HappyRat](https://github.com/kbhaines/reaper/raw/main/index.xml) repository
+(preferred).
 
 Alternatively:
 
