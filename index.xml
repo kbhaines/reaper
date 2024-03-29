@@ -49,6 +49,15 @@
 {\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel1 \b \fs32 HappyRat's Reaper Plugins\par}
 {\pard \ql \f0 \sa180 \li0 \fi0 Contents:\par}
 {\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Articulation KS Mapper\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel2 \b \fs28 Installation\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 1.\tx360\tab Install {\field{\*\fldinst{HYPERLINK "https://reapack.com/user-guide"}}{\fldrslt{\ul
+ReaPack
+}}}
+\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 2.\tx360\tab Import {\field{\*\fldinst{HYPERLINK "https://github.com/kbhaines/reaper/raw/main/index.xml"}}{\fldrslt{\ul
+this repository
+}}}
+\sa180\par}
 }
 ]]></description>
   </metadata>
