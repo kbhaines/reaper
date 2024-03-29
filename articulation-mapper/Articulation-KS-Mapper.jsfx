@@ -1,12 +1,12 @@
-desc:Articulation KS Mapper
-author: happyrat
-version: 1.0.2
-changelog: Initial Release
-link: GitHub Home https://github.com/kbhaines/reaper/blob/main/articulation-mapper/README.md
+/**
+Author: happyrat
+Version: 1.0.2
+Changelog: Initial Release
+Link: GitHub Home https://github.com/kbhaines/reaper/blob/main/articulation-mapper/README.md
 Provides: 
   [data] articulation-maps/*.txt
 
-about:
+About:
   # Articulation Mapper
 
   This JSFX plugin allows you to define articulations which are triggered via
@@ -28,7 +28,9 @@ about:
   - Default articulation can be changed by keyswitch (allows you to mix keyswitching & notation)
   - Simple text file based configuration (examples for Spitfire & VSL included)
 
+**/
 
+desc:Articulation KS Mapper
 in_pin:none
 out_pin:none
 
