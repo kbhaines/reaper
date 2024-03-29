@@ -21,6 +21,10 @@ Example of the UI:
 
 # Installation
 
+Use [ReaPack](https://reapack.com/user-guide) to install (preferred).
+
+Alternatively:
+
 - Copy the [JSFX](Articulation-KS-Mapper.jsfx) to your `REAPER/Effects` folder.
 - Copy the [articulation maps folder](articulation-maps) into the `REAPER/Data` folder.
 
