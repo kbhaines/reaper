@@ -1,3 +1,5 @@
-# HappyRat's Reaper Plugins
+## HappyRat's Reaper Plugins
 
-## Articulation KS Mapper
+Contents:
+
+- Articulation KS Mapper

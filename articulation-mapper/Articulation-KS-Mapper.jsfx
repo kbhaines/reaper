@@ -5,7 +5,6 @@ Changelog: Initial Release
 Link: GitHub Home https://github.com/kbhaines/reaper/blob/main/articulation-mapper/README.md
 Provides: 
   [data] articulation-maps/*.txt
-
 About:
   # Articulation Mapper
 
