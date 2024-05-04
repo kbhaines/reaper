@@ -1,8 +1,10 @@
 /**
 JSFX Name: Articulation Mapper
 Author: happyrat
-Version: 1.0.3
-Changelog: Initial Release
+Version: 1.0.4
+Changelog: 
+  1.0.3 Initial Release
+  1.0.4 Strip 'custom' annotation from the beginning of articulations.
 Link: GitHub Home https://github.com/kbhaines/reaper/blob/main/articulation-mapper/README.md
 Provides: 
   [data] articulation-maps/*.txt
@@ -188,6 +190,7 @@ function send_ks_for_articulation(offset, chan, art_id) local (ks_type, ks_data,
 
 function set_articulation(str) (
   strcpy_from(#msga, #str, 2);
+  match("NOTE %d %d custom %s", #msga, note_chan, note_id, #art_str) ||
   match("NOTE %d %d %s", #msga, note_chan, note_id, #art_str) ? (
     note_art[note_chan * 128 + note_id] = parse_notation(#art_str);
   );

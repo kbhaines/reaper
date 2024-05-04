@@ -91,10 +91,12 @@ relating to the notation given in the following Reaper midi item:
 ; Articulations are searched in order for a match - the first matching notation
 ; will be used, and the corresponding sequence will be sent.
 
-C1 custom _generic_long; Everything after a semicolon is ignored
+C1 _generic_long; Everything after a semicolon is ignored
 
 ; NOTE: you'll need to define custom notations such as that above whenever there
 ; isn't a corresponding Reaper notation 'articulation' or 'ornament' etc.
+; Also note that you don't need to put 'custom' at the start, the plugin
+; will automatically strip this from the notation before it tries matching.
 
 ; You don't actually need to put this articulation on long notes, instead
 ; you can just set an articulation to be a default when no notation has 
