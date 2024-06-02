@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="HappyRat Scripts" commit="04ea4c8c19f83be2f2eca0ba99af23509b07a8cc">
+<index version="1" name="HappyRat Scripts" commit="ff62f3110a32bff23203641af11de340350e6247">
   <category name="articulation-mapper">
     <reapack name="Articulation-KS-Mapper.jsfx" type="effect" desc="Articulation Mapper">
       <metadata>
@@ -38,6 +38,22 @@
         <source type="data" file="articulation-maps/vsl-special-vi14.txt">https://github.com/kbhaines/reaper/raw/04ea4c8c19f83be2f2eca0ba99af23509b07a8cc/articulation-mapper/articulation-maps/vsl-special-vi14.txt</source>
         <source type="data" file="articulation-maps/vsl-special-ww-low.txt">https://github.com/kbhaines/reaper/raw/04ea4c8c19f83be2f2eca0ba99af23509b07a8cc/articulation-mapper/articulation-maps/vsl-special-ww-low.txt</source>
         <source type="data" file="articulation-maps/vsl-special-ww.txt">https://github.com/kbhaines/reaper/raw/04ea4c8c19f83be2f2eca0ba99af23509b07a8cc/articulation-mapper/articulation-maps/vsl-special-ww.txt</source>
+      </version>
+      <version name="1.0.4" author="happyrat" time="2024-05-04T10:58:11Z">
+        <changelog><![CDATA[1.0.3 Initial Release
+1.0.4 Strip 'custom' annotation from the beginning of articulations.]]></changelog>
+        <source>https://github.com/kbhaines/reaper/raw/b340f7c29dc2d664b40f5573e2c0865a17cb284f/articulation-mapper/Articulation-KS-Mapper.jsfx</source>
+        <source type="data" file="articulation-maps/uacc-ks-articulations.txt">https://github.com/kbhaines/reaper/raw/b340f7c29dc2d664b40f5573e2c0865a17cb284f/articulation-mapper/articulation-maps/uacc-ks-articulations.txt</source>
+        <source type="data" file="articulation-maps/uacc-ks-base.txt">https://github.com/kbhaines/reaper/raw/b340f7c29dc2d664b40f5573e2c0865a17cb284f/articulation-mapper/articulation-maps/uacc-ks-base.txt</source>
+        <source type="data" file="articulation-maps/vsl-dimension-brass-low.txt">https://github.com/kbhaines/reaper/raw/b340f7c29dc2d664b40f5573e2c0865a17cb284f/articulation-mapper/articulation-maps/vsl-dimension-brass-low.txt</source>
+        <source type="data" file="articulation-maps/vsl-dimension-brass.txt">https://github.com/kbhaines/reaper/raw/b340f7c29dc2d664b40f5573e2c0865a17cb284f/articulation-mapper/articulation-maps/vsl-dimension-brass.txt</source>
+        <source type="data" file="articulation-maps/vsl-special-brass-low.txt">https://github.com/kbhaines/reaper/raw/b340f7c29dc2d664b40f5573e2c0865a17cb284f/articulation-mapper/articulation-maps/vsl-special-brass-low.txt</source>
+        <source type="data" file="articulation-maps/vsl-special-brass.txt">https://github.com/kbhaines/reaper/raw/b340f7c29dc2d664b40f5573e2c0865a17cb284f/articulation-mapper/articulation-maps/vsl-special-brass.txt</source>
+        <source type="data" file="articulation-maps/vsl-special-db6.txt">https://github.com/kbhaines/reaper/raw/b340f7c29dc2d664b40f5573e2c0865a17cb284f/articulation-mapper/articulation-maps/vsl-special-db6.txt</source>
+        <source type="data" file="articulation-maps/vsl-special-vc8.txt">https://github.com/kbhaines/reaper/raw/b340f7c29dc2d664b40f5573e2c0865a17cb284f/articulation-mapper/articulation-maps/vsl-special-vc8.txt</source>
+        <source type="data" file="articulation-maps/vsl-special-vi14.txt">https://github.com/kbhaines/reaper/raw/b340f7c29dc2d664b40f5573e2c0865a17cb284f/articulation-mapper/articulation-maps/vsl-special-vi14.txt</source>
+        <source type="data" file="articulation-maps/vsl-special-ww-low.txt">https://github.com/kbhaines/reaper/raw/b340f7c29dc2d664b40f5573e2c0865a17cb284f/articulation-mapper/articulation-maps/vsl-special-ww-low.txt</source>
+        <source type="data" file="articulation-maps/vsl-special-ww.txt">https://github.com/kbhaines/reaper/raw/b340f7c29dc2d664b40f5573e2c0865a17cb284f/articulation-mapper/articulation-maps/vsl-special-ww.txt</source>
       </version>
     </reapack>
   </category>
