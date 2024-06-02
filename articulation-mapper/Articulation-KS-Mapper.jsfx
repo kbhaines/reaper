@@ -1,7 +1,7 @@
 /**
 JSFX Name: Articulation Mapper
 Author: happyrat
-Version: 1.0.4
+Version: 1.0.5
 Changelog: 
   1.0.3 Initial Release
   1.0.4 Strip 'custom' annotation from the beginning of articulations.
