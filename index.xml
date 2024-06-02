@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="HappyRat Scripts" commit="ff62f3110a32bff23203641af11de340350e6247">
+<index version="1" name="HappyRat Scripts" commit="4dc46ea7b29dafccb133e2522848cf41527f34b3">
   <category name="articulation-mapper">
     <reapack name="Articulation-KS-Mapper.jsfx" type="effect" desc="Articulation Mapper">
       <metadata>
@@ -54,6 +54,59 @@
         <source type="data" file="articulation-maps/vsl-special-vi14.txt">https://github.com/kbhaines/reaper/raw/b340f7c29dc2d664b40f5573e2c0865a17cb284f/articulation-mapper/articulation-maps/vsl-special-vi14.txt</source>
         <source type="data" file="articulation-maps/vsl-special-ww-low.txt">https://github.com/kbhaines/reaper/raw/b340f7c29dc2d664b40f5573e2c0865a17cb284f/articulation-mapper/articulation-maps/vsl-special-ww-low.txt</source>
         <source type="data" file="articulation-maps/vsl-special-ww.txt">https://github.com/kbhaines/reaper/raw/b340f7c29dc2d664b40f5573e2c0865a17cb284f/articulation-mapper/articulation-maps/vsl-special-ww.txt</source>
+      </version>
+      <version name="1.0.5" author="happyrat" time="2024-06-02T09:40:56Z">
+        <changelog><![CDATA[1.0.3 Initial Release
+1.0.4 Strip 'custom' annotation from the beginning of articulations.
+1.0.5 Add Spitfire SO keyswitches for entire orchestra]]></changelog>
+        <source>https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/Articulation-KS-Mapper.jsfx</source>
+        <source type="data" file="articulation-maps/sso-AltoFlute.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-AltoFlute.txt</source>
+        <source type="data" file="articulation-maps/sso-Bass-Clarinet.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Bass-Clarinet.txt</source>
+        <source type="data" file="articulation-maps/sso-Bass-Flute.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Bass-Flute.txt</source>
+        <source type="data" file="articulation-maps/sso-Bass-Trombone-a2.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Bass-Trombone-a2.txt</source>
+        <source type="data" file="articulation-maps/sso-Bass-Trombone-solo.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Bass-Trombone-solo.txt</source>
+        <source type="data" file="articulation-maps/sso-Basses.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Basses.txt</source>
+        <source type="data" file="articulation-maps/sso-Bassoon-Solo.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Bassoon-Solo.txt</source>
+        <source type="data" file="articulation-maps/sso-Bassoons-a2.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Bassoons-a2.txt</source>
+        <source type="data" file="articulation-maps/sso-Cellos.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Cellos.txt</source>
+        <source type="data" file="articulation-maps/sso-Cimbassi.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Cimbassi.txt</source>
+        <source type="data" file="articulation-maps/sso-Clarinet-Solo.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Clarinet-Solo.txt</source>
+        <source type="data" file="articulation-maps/sso-Clarinet-a2.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Clarinet-a2.txt</source>
+        <source type="data" file="articulation-maps/sso-Contrabass-Clarinet.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Contrabass-Clarinet.txt</source>
+        <source type="data" file="articulation-maps/sso-Contrabass-Trombone.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Contrabass-Trombone.txt</source>
+        <source type="data" file="articulation-maps/sso-Contrabass-Tuba.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Contrabass-Tuba.txt</source>
+        <source type="data" file="articulation-maps/sso-Contrabasson.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Contrabasson.txt</source>
+        <source type="data" file="articulation-maps/sso-Cor-Anglais.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Cor-Anglais.txt</source>
+        <source type="data" file="articulation-maps/sso-Flute-Solo.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Flute-Solo.txt</source>
+        <source type="data" file="articulation-maps/sso-Flute-a2.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Flute-a2.txt</source>
+        <source type="data" file="articulation-maps/sso-Horn-Solo.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Horn-Solo.txt</source>
+        <source type="data" file="articulation-maps/sso-Horn-a2.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Horn-a2.txt</source>
+        <source type="data" file="articulation-maps/sso-Horns-a6.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Horns-a6.txt</source>
+        <source type="data" file="articulation-maps/sso-Oboe-Solo.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Oboe-Solo.txt</source>
+        <source type="data" file="articulation-maps/sso-Oboe-a2.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Oboe-a2.txt</source>
+        <source type="data" file="articulation-maps/sso-Piccolo.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Piccolo.txt</source>
+        <source type="data" file="articulation-maps/sso-Trombone-Solo.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Trombone-Solo.txt</source>
+        <source type="data" file="articulation-maps/sso-Trombone-a2.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Trombone-a2.txt</source>
+        <source type="data" file="articulation-maps/sso-Trumpet-Solo.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Trumpet-Solo.txt</source>
+        <source type="data" file="articulation-maps/sso-Trumpet-a2.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Trumpet-a2.txt</source>
+        <source type="data" file="articulation-maps/sso-Trumpet-a6.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Trumpet-a6.txt</source>
+        <source type="data" file="articulation-maps/sso-Tuba.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Tuba.txt</source>
+        <source type="data" file="articulation-maps/sso-Violas.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Violas.txt</source>
+        <source type="data" file="articulation-maps/sso-Violins-1.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Violins-1.txt</source>
+        <source type="data" file="articulation-maps/sso-Violins-2.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-Violins-2.txt</source>
+        <source type="data" file="articulation-maps/sso-basses-all.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-basses-all.txt</source>
+        <source type="data" file="articulation-maps/sso-cellos-all.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/sso-cellos-all.txt</source>
+        <source type="data" file="articulation-maps/uacc-ks-articulations.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/uacc-ks-articulations.txt</source>
+        <source type="data" file="articulation-maps/uacc-ks-base.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/uacc-ks-base.txt</source>
+        <source type="data" file="articulation-maps/vsl-dimension-brass-low.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/vsl-dimension-brass-low.txt</source>
+        <source type="data" file="articulation-maps/vsl-dimension-brass.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/vsl-dimension-brass.txt</source>
+        <source type="data" file="articulation-maps/vsl-special-brass-low.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/vsl-special-brass-low.txt</source>
+        <source type="data" file="articulation-maps/vsl-special-brass.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/vsl-special-brass.txt</source>
+        <source type="data" file="articulation-maps/vsl-special-db6.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/vsl-special-db6.txt</source>
+        <source type="data" file="articulation-maps/vsl-special-vc8.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/vsl-special-vc8.txt</source>
+        <source type="data" file="articulation-maps/vsl-special-vi14.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/vsl-special-vi14.txt</source>
+        <source type="data" file="articulation-maps/vsl-special-ww-low.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/vsl-special-ww-low.txt</source>
+        <source type="data" file="articulation-maps/vsl-special-ww.txt">https://github.com/kbhaines/reaper/raw/4dc46ea7b29dafccb133e2522848cf41527f34b3/articulation-mapper/articulation-maps/vsl-special-ww.txt</source>
       </version>
     </reapack>
   </category>
