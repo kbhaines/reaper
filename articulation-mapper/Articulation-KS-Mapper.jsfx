@@ -5,6 +5,7 @@ Version: 1.0.4
 Changelog: 
   1.0.3 Initial Release
   1.0.4 Strip 'custom' annotation from the beginning of articulations.
+  1.0.5 Add Spitfire SO keyswitches for entire orchestra
 Link: GitHub Home https://github.com/kbhaines/reaper/blob/main/articulation-mapper/README.md
 Provides: 
   [data] articulation-maps/*.txt
