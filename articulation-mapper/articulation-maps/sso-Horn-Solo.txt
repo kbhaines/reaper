@@ -1,0 +1,9 @@
+C-1 Long
+C#-1 Marcato
+D-1 Tenuto
+D#-1 Staccato
+E-1 TrillMinor2nd
+F-1 TrillMajor2nd
+F#-1 LongFlutter
+G-1 Rip
+G#-1 Fall

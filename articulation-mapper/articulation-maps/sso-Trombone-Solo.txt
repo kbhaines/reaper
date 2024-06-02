@@ -1,0 +1,14 @@
+C-1 Long
+C#-1 LongCuivre
+D-1 LongMuted
+D#-1 Marcato
+E-1 MarcatoMuted
+F-1 Tenuto
+F#-1 TenutoMuted
+G-1 Staccato
+G#-1 StaccatoMuted
+A-1 MultiTongued
+A#-1 LongFlutter
+B-1 LongFlutterMuted
+C0 Rip
+C#0 Fall

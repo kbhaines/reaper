@@ -1,0 +1,9 @@
+C-1 Long
+C#-1 LongCuivre
+D-1 LongStopped
+D#-1 Marcato
+E-1 Tenuto
+F-1 Staccato
+F#-1 StaccatoMuted
+G-1 Rip
+G#-1 Fall

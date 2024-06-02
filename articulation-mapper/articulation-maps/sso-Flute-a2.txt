@@ -1,0 +1,13 @@
+C-1 Long
+C#-1 LongFlutter
+D-1 LongHarmonics
+D#-1 LongOverblown
+E-1 LongHollow
+F-1 MultiTongued
+F#-1 Marcato
+G-1 Tenuto
+G#-1 Staccato
+A-1 ShortOverblown
+A#-1 TrillMinor2nd
+B-1 TrillMajor2nd
+C0 MarcatoSfz

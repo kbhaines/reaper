@@ -1,0 +1,5 @@
+C-1 Long
+C#-1 Tenuto
+D-1 Staccato
+D#-1 TrillMinor2nd
+E-1 TrillMajor2nd

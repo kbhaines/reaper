@@ -1,0 +1,15 @@
+C-1 Long
+C#-1 LongCuivre
+D-1 LongStopped
+D#-1 Tenuto
+E-1 Staccato
+F-1 TrillMinor2nd
+F#-1 TrillMajor2nd
+G-1 MultiTongued
+G#-1 LongFlutter
+A-1 BellsUpStaccato
+A#-1 BellsUpQuaver
+B-1 BellsUpCrotchet
+C0 BellsUpLong
+C#0 Rip
+D0 Fall

@@ -1,0 +1,6 @@
+C-1 Long
+C#-1 LongFlutter
+D-1 LongOverblown
+D#-1 Marcato
+E-1 Tenuto
+F-1 Staccato

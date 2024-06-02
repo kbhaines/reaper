@@ -1,0 +1,8 @@
+C-1 Long
+C#-1 LongFlutter
+D-1 MultiTongued
+D#-1 Marcato
+E-1 Tenuto
+F-1 Staccato
+F#-1 TrillMinor2nd
+G-1 TrillMajor2nd

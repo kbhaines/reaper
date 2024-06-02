@@ -1,0 +1,16 @@
+C-1 Long
+C#-1 LongMuted
+D-1 Marcato
+D#-1 MarcatoMuted
+E-1 Tenuto
+F-1 TenutoMuted
+F#-1 Staccato
+G-1 StaccatoMuted
+G#-1 TrillMinor2nd
+A-1 TrillMajor2nd
+A#-1 MultiTongued
+B-1 LongFlutter
+C0 LongMariachi
+C#0 Rip
+D0 Fall
+D#0 FxGlissandi

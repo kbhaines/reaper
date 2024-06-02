@@ -1,0 +1,4 @@
+C-1 Long
+C#-1 Marcato
+D-1 Tenuto
+D#-1 Staccato
